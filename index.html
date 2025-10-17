@@ -2,16 +2,47 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kasper Hsiang - Personal Website</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
     <style>
-        /* 小補強：結果卡片與區塊 */
-        .api-row {
+        /* 補強：讓按鈕與你網站風格一致（圓角、柔色、hover） */
+        .btn {
+            appearance: none;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all .15s;
+            font: inherit;
+            color: #111827;
+        }
+
+        .btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .btn.primary {
+            background: #111827;
+            color: #fff;
+            border-color: #111827;
+        }
+
+        .btn.primary:hover {
+            background: #0b1220;
+        }
+
+        .btn.ghost {
+            background: #f8fafc;
+        }
+
+        .row {
             display: flex;
-            gap: 12px;
             flex-wrap: wrap;
+            gap: 12px;
             align-items: center;
         }
 
@@ -24,38 +55,44 @@
             color: #3730a3;
         }
 
-        .summoner-card,
-        .champion-card {
+        .card {
             border: 1px solid #e5e7eb;
             border-radius: 12px;
-            padding: 12px;
-            margin: 8px 0;
+            padding: 14px;
+            margin-top: 10px;
         }
 
-        .champions-grid {
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
         }
 
-        .lookup-message.success {
+        .muted {
+            color: #6b7280;
+            font-size: .9rem;
+        }
+
+        .mini {
+            font-size: .85rem;
+            color: #4b5563;
+        }
+
+        .section-title {
+            margin-top: 18px;
+            margin-bottom: 6px;
+        }
+
+        .ok {
             color: #16a34a;
         }
 
-        .lookup-message.error {
+        .warn {
             color: #dc2626;
         }
 
         .mono {
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        }
-
-        pre.api-out {
-            background: #0f172a;
-            color: #e5e7eb;
-            padding: 14px;
-            border-radius: 10px;
-            overflow: auto;
         }
     </style>
 </head>
@@ -99,301 +136,306 @@
                 target="_blank" class="cta-button">View Challenge Details</a>
         </section>
 
-        <!-- CONTACT FORM SECTION - Added for user contact functionality -->
+        <!-- CONTACT FORM -->
         <section class="contact-form">
             <h3>Get In Touch</h3>
             <p>Have a question or want to connect? Send me a message!</p>
-            <div id="form-message" class="form-message" style="display: none;"></div>
+            <div id="form-message" class="form-message" style="display:none;"></div>
             <form class="contact-form-container">
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="message">Message</label>
-                    <textarea id="message" name="message" rows="5" required></textarea>
-                </div>
+                <div class="form-group"><label for="name">Name</label><input type="text" id="name" required></div>
+                <div class="form-group"><label for="email">Email</label><input type="email" id="email" required></div>
+                <div class="form-group"><label for="message">Message</label><textarea id="message" rows="5"
+                        required></textarea></div>
                 <button type="submit" class="contact-submit-btn">Send Message</button>
             </form>
         </section>
-        <!-- END CONTACT FORM SECTION -->
 
-        <!-- LEAGUE DATA LOOKUP SECTION -->
+        <!-- LEAGUE DATA LOOKUP -->
         <section class="league-lookup">
             <h3>League Data Lookup</h3>
-            <p>Enter a Riot ID to see their level and top champions!</p>
-            <div id="lookup-message" class="lookup-message" style="display: none;"></div>
+            <p class="muted">Enter a Riot ID to see level, ranks, style, special days and champion stats.</p>
+            <div id="lookup-message" class="lookup-message" style="display:none;"></div>
 
-            <div class="lookup-form-container">
-                <div class="form-group">
-                    <label for="summoner-name">Riot ID</label>
-                    <input type="text" id="summoner-name" name="summoner-name"
-                        placeholder="GameName#TAG (e.g., Hide on bush#KR1)" required>
-                    <small style="color: #687078; display: block; margin-top: 4px;">Format: GameName#TAG</small>
+            <div class="lookup-form-container card">
+                <div class="row">
+                    <div class="form-group">
+                        <label for="summoner-name">Riot ID</label>
+                        <input type="text" id="summoner-name" placeholder="GameName#TAG (e.g., Hide on bush#KR1)"
+                            required>
+                        <div class="mini">Format: GameName#TAG</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="region">Platform</label>
+                        <select id="region">
+                            <option value="na1">North America (na1)</option>
+                            <option value="euw1">Europe West (euw1)</option>
+                            <option value="eun1">Europe Nordic & East (eun1)</option>
+                            <option value="kr" selected>Korea (kr)</option>
+                            <option value="br1">Brazil (br1)</option>
+                            <option value="la1">Latin America North (la1)</option>
+                            <option value="la2">Latin America South (la2)</option>
+                            <option value="oc1">Oceania (oc1)</option>
+                            <option value="tr1">Turkey (tr1)</option>
+                            <option value="ru">Russia (ru)</option>
+                            <option value="jp1">Japan (jp1)</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="region">Platform</label>
-                    <select id="region" name="region">
-                        <option value="na1">North America (na1)</option>
-                        <option value="euw1">Europe West (euw1)</option>
-                        <option value="eun1">Europe Nordic & East (eun1)</option>
-                        <option value="kr" selected>Korea (kr)</option>
-                        <option value="br1">Brazil (br1)</option>
-                        <option value="la1">Latin America North (la1)</option>
-                        <option value="la2">Latin America South (la2)</option>
-                        <option value="oc1">Oceania (oc1)</option>
-                        <option value="tr1">Turkey (tr1)</option>
-                        <option value="ru">Russia (ru)</option>
-                        <option value="jp1">Japan (jp1)</option>
-                    </select>
+                <div class="row">
+                    <button type="button" id="lookup-btn" class="btn primary">Look Up Summoner</button>
+                    <span id="puuid-pill" class="pill mono" style="display:none;"></span>
                 </div>
-                <button type="button" id="lookup-btn" class="lookup-submit-btn">Look Up Summoner</button>
             </div>
 
-            <!-- Results display area -->
-            <div id="summoner-results" class="summoner-results" style="display: none;">
-                <h4>Summoner Info <span class="pill mono" id="puuid-pill" style="display:none;"></span></h4>
-                <div id="summoner-info"></div>
-                <div id="champion-mastery"></div>
+            <div id="summoner-results" style="display:none;">
+                <!-- Summoner summary -->
+                <div class="card">
+                    <h4 class="section-title">Summoner</h4>
+                    <div id="summoner-info" class="grid"></div>
+                </div>
 
-                <!-- extra actions -->
-                <div style="margin-top:12px;">
-                    <div class="api-row">
-                        <button id="btn-style">Analyze Style</button>
-                        <label>Count</label>
-                        <input id="countStyle" type="number" value="20" min="1" max="100" style="width:110px;">
-                    </div>
-                    <div class="api-row">
-                        <button id="btn-sd">Fetch Special Days</button>
-                        <label>Count</label>
-                        <input id="countSD" type="number" value="50" min="1" max="200" style="width:110px;">
-                    </div>
-                    <div class="api-row">
-                        <button id="btn-ch">Analyze Champions</button>
-                        <label>Start</label>
-                        <input id="startCh" type="number" value="0" min="0" style="width:110px;">
-                        <label>Count</label>
-                        <input id="countCh" type="number" value="30" min="1" max="50" style="width:110px;">
-                        <button id="btn-ch-more">Load More</button>
-                        <span id="pageHint" class="mono" style="font-size:12px;"></span>
+                <!-- Ranks summary -->
+                <div class="card">
+                    <h4 class="section-title">Ranks</h4>
+                    <div id="rank-info" class="grid"></div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <h4 class="section-title">Analyze</h4>
+                    <div class="row">
+                        <button id="btn-style" class="btn">Analyze Style</button>
+                        <label>Count</label><input id="countStyle" type="number" value="20" min="1" max="100"
+                            style="width:110px;">
+                        <button id="btn-sd" class="btn">Special Days</button>
+                        <label>Count</label><input id="countSD" type="number" value="50" min="1" max="200"
+                            style="width:110px;">
+                        <button id="btn-ch" class="btn">Champion Stats</button>
+                        <label>Start</label><input id="startCh" type="number" value="0" min="0" style="width:110px;">
+                        <label>Count</label><input id="countCh" type="number" value="30" min="1" max="50"
+                            style="width:110px;">
+                        <button id="btn-ch-more" class="btn ghost">Load More</button>
+                        <span id="pageHint" class="mini mono"></span>
                     </div>
                 </div>
 
-                <!-- JSON output -->
-                <h4 style="margin-top:16px;">API Output</h4>
-                <pre id="api-out" class="api-out">{}</pre>
+                <!-- Results (pretty text, not raw JSON) -->
+                <div class="card">
+                    <h4 class="section-title">Style Result</h4>
+                    <div id="style-out" class="mini"></div>
+                </div>
+
+                <div class="card">
+                    <h4 class="section-title">Special Days</h4>
+                    <div id="sd-out" class="mini"></div>
+                </div>
+
+                <div class="card">
+                    <h4 class="section-title">Champion Highlights</h4>
+                    <div id="ch-out" class="mini"></div>
+                </div>
             </div>
         </section>
-        <!-- END LEAGUE DATA LOOKUP SECTION -->
     </main>
 
     <footer>
         <p>&copy; 2025 Kasper Hsiang. Built with ❤️ on AWS</p>
     </footer>
 
-    <!-- Contact form JavaScript -->
     <script src="script.js"></script>
     <script>
-        // === Replace these with your Lambda Function URLs (AuthType=NONE with proper CORS) ===
+        // === Replace with your Lambda Function URLs ===
         const URL_SUMMONER = "https://nf55sobn4zneiw4evs6x7sxjqy0vtgex.lambda-url.us-east-1.on.aws/";
         const URL_STYLE = "https://lf7ndc45w3qazc7pnteazdjm3u0furgj.lambda-url.us-east-1.on.aws/";
         const URL_SD = "https://fie3fo5jsucadrgvoffzwb2jci0nnqme.lambda-url.us-east-1.on.aws/";
         const URL_CH = "https://puvy5gh5fxbhaqgm2p4dl43eee0tfhbp.lambda-url.us-east-1.on.aws/";
-        // ================================================================================
+        // ==============================================
 
         const msg = (text, type = 'success') => {
             const div = document.getElementById('lookup-message');
-            div.textContent = text;
-            div.className = `lookup-message ${type}`;
-            div.style.display = 'block';
-            setTimeout(() => div.style.display = 'none', 10000);
+            div.textContent = text; div.className = `lookup-message ${type}`;
+            div.style.display = 'block'; setTimeout(() => div.style.display = 'none', 6000);
         };
-        const show = (obj) => {
-            document.getElementById('api-out').textContent = JSON.stringify(obj, null, 2);
-        };
+        const el = id => document.getElementById(id);
         const safeFetch = async (url) => {
-            const r = await fetch(url);
-            const t = await r.text();
-            try { return { status: r.status, json: JSON.parse(t) }; }
-            catch { return { status: r.status, json: { _raw: t } }; }
+            const r = await fetch(url); const t = await r.text();
+            try { return { status: r.status, json: JSON.parse(t) }; } catch { return { status: r.status, json: { _raw: t } } }
+        };
+        const guessRegional = (platform) => {
+            const asia = new Set(["kr", "jp1"]);
+            const amer = new Set(["na1", "br1", "la1", "la2"]);
+            const eu = new Set(["euw1", "eun1", "tr1", "ru"]);
+            const sea = new Set(["oc1", "ph2", "sg2", "th2", "tw2", "vn2", "id1"]);
+            if (asia.has(platform)) return "asia";
+            if (amer.has(platform)) return "americas";
+            if (eu.has(platform)) return "europe";
+            if (sea.has(platform)) return "sea";
+            return "americas";
+        };
+        const fmtRank = (e) => {
+            // league-v4 entries item: queueType, tier, rank(DIV), leaguePoints, wins, losses
+            if (!e || !e.tier) return "Unranked";
+            const q = (e.queueType || "").replaceAll("_", " ").toLowerCase();
+            const wr = e.wins + e.losses > 0 ? Math.round(e.wins * 100 / (e.wins + e.losses)) : 0;
+            return `${e.tier} ${e.rank || ""} – ${e.leaguePoints || 0} LP (${e.wins || 0}-${e.losses || 0}, ${wr}% WR) · ${q}`;
         };
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const lookupBtn = document.getElementById('lookup-btn');
-            const summonerNameInput = document.getElementById('summoner-name');
-            const regionSelect = document.getElementById('region');
+        document.addEventListener('DOMContentLoaded', () => {
+            const lookupBtn = el('lookup-btn');
+            const nameInput = el('summoner-name');
+            const regionSel = el('region');
 
-            const btnStyle = document.getElementById('btn-style');
-            const btnSD = document.getElementById('btn-sd');
-            const btnCh = document.getElementById('btn-ch');
-            const btnChMore = document.getElementById('btn-ch-more');
+            const btnStyle = el('btn-style');
+            const btnSD = el('btn-sd');
+            const btnCh = el('btn-ch');
+            const btnChMore = el('btn-ch-more');
 
             let current = { puuid: null, regional: null, nextStart: 0 };
 
-            lookupBtn.addEventListener('click', async function () {
-                const summonerName = summonerNameInput.value.trim();
-                const platform = regionSelect.value;
-                const messageDiv = document.getElementById('lookup-message');
-                const resultsDiv = document.getElementById('summoner-results');
+            lookupBtn.addEventListener('click', async () => {
+                const riotId = nameInput.value.trim();
+                const platform = regionSel.value;
+                if (!riotId) return msg('Please enter a Riot ID', 'error');
+                if (!riotId.includes('#')) return msg('Please use Riot ID format: GameName#TAG', 'error');
 
-                if (!summonerName) return msg('Please enter a Riot ID', 'error');
-                if (!summonerName.includes('#')) return msg('Please use Riot ID format: GameName#TAG', 'error');
-
-                lookupBtn.textContent = 'Looking up...';
-                lookupBtn.disabled = true;
-                messageDiv.style.display = 'none';
-                resultsDiv.style.display = 'none';
-
+                lookupBtn.textContent = 'Looking up...'; lookupBtn.disabled = true;
                 try {
-                    // GET to your Lambda (Function URL)
-                    const url = `${URL_SUMMONER}?riotId=${encodeURIComponent(summonerName)}&platform=${encodeURIComponent(platform)}`;
+                    const url = `${URL_SUMMONER}?riotId=${encodeURIComponent(riotId)}&platform=${encodeURIComponent(platform)}`;
                     const { status, json } = await safeFetch(url);
+                    if (status !== 200) { msg(json.error || 'Failed to fetch summoner data', 'error'); return; }
 
-                    if (status === 200) {
-                        displaySummonerData(json);
-                        msg('Summoner found!', 'success');
-                        resultsDiv.style.display = 'block';
+                    // 基本資料
+                    const displayName = json?.summoner?.name || (json?.account ? `${json.account.gameName}#${json.account.tag}` : 'Unknown');
+                    el('summoner-info').innerHTML = `
+            <div class="card">
+              <div><strong>Name:</strong> ${displayName}</div>
+              <div><strong>Level:</strong> ${json?.summoner?.level ?? '—'}</div>
+            </div>
+            <div class="card">
+              <div><strong>Top Champions:</strong></div>
+              <div class="mini">
+                ${(json.topChampions || []).slice(0, 3).map((c, i) => `#${i + 1} id:${c.championId} · lvl ${c.championLevel} · ${Number(c.championPoints || 0).toLocaleString()} pts`).join('<br>')
+                        || 'No mastery data'
+                        }
+              </div>
+            </div>
+          `;
 
-                        // keep puuid / regional for next calls
-                        current.puuid = json?.account?.puuid || null;
-                        current.regional = json?.regional || guessRegional(platform);
-                        current.nextStart = 0;
+                    // 段位
+                    const ranks = Array.isArray(json.ranks) ? json.ranks : [];
+                    el('rank-info').innerHTML = ranks.length
+                        ? ranks.map(r => `<div class="card">${fmtRank(r)}</div>`).join('')
+                        : `<div class="card">Unranked</div>`;
 
-                        // show puuid
-                        const pill = document.getElementById('puuid-pill');
-                        pill.textContent = current.puuid ? `puuid: ${current.puuid}` : '';
-                        pill.style.display = current.puuid ? 'inline-block' : 'none';
+                    // 狀態保存
+                    current.puuid = json?.account?.puuid || null;
+                    current.regional = json?.regional || guessRegional(platform);
+                    current.nextStart = 0;
 
-                        show({ status, ...json });
-                    } else {
-                        msg(json.error || 'Failed to fetch summoner data', 'error');
-                        show({ status, ...json });
-                    }
+                    // 顯示/PUUID pill
+                    const pill = el('puuid-pill');
+                    pill.textContent = current.puuid ? `puuid: ${current.puuid}` : '';
+                    pill.style.display = current.puuid ? 'inline-block' : 'none';
+                    el('summoner-results').style.display = 'block';
+
+                    // 清空舊結果
+                    el('style-out').innerHTML = '';
+                    el('sd-out').innerHTML = '';
+                    el('ch-out').innerHTML = '';
+                    el('pageHint').textContent = '';
+                    msg('Summoner found!');
                 } catch (e) {
-                    console.error(e);
-                    msg('Network error. Please try again.', 'error');
+                    console.error(e); msg('Network error. Please try again.', 'error');
                 } finally {
-                    lookupBtn.textContent = 'Look Up Summoner';
-                    lookupBtn.disabled = false;
+                    lookupBtn.textContent = 'Look Up Summoner'; lookupBtn.disabled = false;
                 }
             });
 
-            // Enter key support
-            summonerNameInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') lookupBtn.click(); });
+            nameInput.addEventListener('keypress', e => { if (e.key === 'Enter') lookupBtn.click(); });
 
-            // Style
+            // STYLE
             btnStyle.addEventListener('click', async () => {
-                const count = document.getElementById('countStyle').value || '20';
                 if (!current.puuid) return msg('Please look up a summoner first.', 'error');
-                const regional = current.regional || 'asia';
-                const url = `${URL_STYLE}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(regional)}&count=${encodeURIComponent(count)}`;
+                const cnt = el('countStyle').value || '20';
+                const url = `${URL_STYLE}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&count=${cnt}`;
                 const { status, json } = await safeFetch(url);
-                show({ status, endpoint: "/style", ...json });
-                if (status === 200) msg('Style analyzed.', 'success'); else msg(json.error || 'Style API failed', 'error');
+                if (status !== 200) { msg(json.error || 'Style API failed', 'error'); return; }
+                const a = json.agg || {};
+                const tags = (json.tags || []).join(', ') || '—';
+                el('style-out').innerHTML = `
+          <div><strong>Style:</strong> ${tags}</div>
+          <div class="grid">
+            <div class="card mini"><strong>Win Rate</strong><br>${a.winRate ? Math.round(a.winRate * 100) : 0}%</div>
+            <div class="card mini"><strong>KDA</strong><br>${(a.kda || 0).toFixed(2)}</div>
+            <div class="card mini"><strong>KP</strong><br>${a.kp ? Math.round(a.kp * 100) : 0}%</div>
+            <div class="card mini"><strong>DMG / min</strong><br>${Math.round(a.dmgPerMin || 0)}</div>
+            <div class="card mini"><strong>Vision / game</strong><br>${(a.visionScorePerGame || 0).toFixed(1)}</div>
+            <div class="card mini"><strong>Obj.Part / game</strong><br>${(a.objPartPerGame || 0).toFixed(2)}</div>
+          </div>
+        `;
+                msg('Style analyzed.');
             });
 
-            // Special Days
+            // SPECIAL DAYS
             btnSD.addEventListener('click', async () => {
-                const count = document.getElementById('countSD').value || '50';
                 if (!current.puuid) return msg('Please look up a summoner first.', 'error');
-                const regional = current.regional || 'asia';
-                const url = `${URL_SD}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(regional)}&count=${encodeURIComponent(count)}`;
+                const cnt = el('countSD').value || '50';
+                const url = `${URL_SD}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&count=${cnt}`;
                 const { status, json } = await safeFetch(url);
-                show({ status, endpoint: "/special-days", ...json });
-                if (status === 200) {
-                    msg(json.partial ? 'Partial special-days (to avoid timeout).' : 'Special days fetched.', 'success');
-                } else {
-                    msg(json.error || 'Special-days API failed', 'error');
-                }
+                if (status !== 200) { msg(json.error || 'Special-days API failed', 'error'); return; }
+                const evs = Array.isArray(json.events) ? json.events : [];
+                const badges = evs.length ? evs.slice(0, 5).map(e => `<span class="pill mini mono">${e.notes.join(' · ')}</span>`).join(' ') : '<span class="mini">No notable events in range</span>';
+                el('sd-out').innerHTML = `
+          <div class="grid">
+            <div class="card mini"><strong>Max Win Streak</strong><br>${json.maxWinStreak || 0}</div>
+            <div class="card mini"><strong>Max Lose Streak</strong><br>${json.maxLoseStreak || 0}</div>
+            <div class="card mini"><strong>Current Win Streak</strong><br>${json.recentWinStreak || 0}</div>
+            <div class="card mini"><strong>Current Lose Streak</strong><br>${json.recentLoseStreak || 0}</div>
+          </div>
+          <div class="section-title mini"><strong>Highlights</strong></div>
+          <div>${badges}</div>
+          ${json.partial ? '<div class="mini warn" style="margin-top:6px;">Partial result (timeout-safe). Reduce count or fetch again.</div>' : ''}
+        `;
+                msg(json.partial ? 'Partial special-days loaded.' : 'Special days loaded.');
             });
 
-            // Champions (paged)
+            // CHAMPIONS
             btnCh.addEventListener('click', async () => {
-                const start = parseInt(document.getElementById('startCh').value || '0', 10) || 0;
-                current.nextStart = start;
-                await loadChPage(false);
-            });
-            btnChMore.addEventListener('click', async () => {
-                await loadChPage(true);
-            });
-
-            async function loadChPage(append) {
                 if (!current.puuid) return msg('Please look up a summoner first.', 'error');
-                const count = document.getElementById('countCh').value || '30';
-                const regional = current.regional || 'asia';
-                const url = `${URL_CH}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(regional)}&start=${current.nextStart}&count=${encodeURIComponent(count)}`;
+                current.nextStart = parseInt(el('startCh').value || '0', 10) || 0;
+                await loadCh(false);
+            });
+            btnChMore.addEventListener('click', async () => { await loadCh(true); });
+
+            async function loadCh(append) {
+                const cnt = el('countCh').value || '30';
+                const url = `${URL_CH}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&start=${current.nextStart}&count=${cnt}`;
                 const { status, json } = await safeFetch(url);
+                if (status !== 200) { msg(json.error || 'Champions API failed', 'error'); return; }
 
-                const outEl = document.getElementById('api-out');
-                if (!append) {
-                    show({ status, endpoint: "/champions", ...json });
-                } else {
-                    try {
-                        const prev = JSON.parse(outEl.textContent || "{}");
-                        show({ ...prev, appended: json });
-                    } catch {
-                        show({ status, endpoint: "/champions", ...json });
-                    }
-                }
+                const block = htmlForChampions(json);
+                if (!append) el('ch-out').innerHTML = block; else el('ch-out').insertAdjacentHTML('beforeend', block);
 
-                current.nextStart = (json?.nextStart ?? (current.nextStart + Number(count)));
-                document.getElementById('pageHint').textContent = `nextStart=${current.nextStart}` + (json?.partial ? " (partial - click Load More)" : "");
-                if (status === 200) msg(json.partial ? 'Partial champions (to avoid timeout).' : 'Champions analyzed.', 'success');
-                else msg(json.error || 'Champions API failed', 'error');
+                current.nextStart = (json?.nextStart ?? (current.nextStart + Number(cnt)));
+                el('pageHint').textContent = `nextStart=${current.nextStart}` + (json?.partial ? " (partial)" : "");
+                msg(json.partial ? 'Partial champions loaded.' : 'Champion stats loaded.');
             }
 
-            // platform → regional 猜測（後端回傳 regional 更準，這裡只是備援）
-            function guessRegional(platform) {
-                const asia = new Set(["kr", "jp1"]);
-                const amer = new Set(["na1", "br1", "la1", "la2"]);
-                const eu = new Set(["euw1", "eun1", "tr1", "ru"]);
-                const sea = new Set(["oc1", "ph2", "sg2", "th2", "tw2", "vn2", "id1"]);
-                if (asia.has(platform)) return "asia";
-                if (amer.has(platform)) return "americas";
-                if (eu.has(platform)) return "europe";
-                if (sea.has(platform)) return "sea";
-                return "americas";
+            function htmlForChampions(j) {
+                const strong = (j.strong || []).slice(0, 6).map(x => `<div class="card mini"><strong>#${x.championId}</strong><br>${(x.winRate * 100).toFixed(0)}% WR · KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`).join('');
+                const weak = (j.weak || []).slice(0, 6).map(x => `<div class="card mini"><strong>#${x.championId}</strong><br>${(x.winRate * 100).toFixed(0)}% WR · KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`).join('');
+                const rec = (j.recommend || []).slice(0, 6).map(x => `<div class="card mini"><strong>#${x.championId}</strong><br>KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`).join('');
+                return `
+          <div class="mini"><strong>Strong picks</strong></div>
+          <div class="grid">${strong || '<div class="mini">—</div>'}</div>
+          <div class="mini" style="margin-top:10px;"><strong>Weak picks</strong></div>
+          <div class="grid">${weak || '<div class="mini">—</div>'}</div>
+          <div class="mini" style="margin-top:10px;"><strong>Try these</strong></div>
+          <div class="grid">${rec || '<div class="mini">—</div>'}</div>
+          ${j.partial ? '<div class="mini warn" style="margin-top:6px;">Partial result – click Load More to continue.</div>' : ''}
+        `;
             }
         });
-
-        function displaySummonerData(data) {
-            const resultsDiv = document.getElementById('summoner-results');
-            const summonerInfo = document.getElementById('summoner-info');
-            const championMastery = document.getElementById('champion-mastery');
-
-            const displayName = data?.summoner?.name || (data?.account ? `${data.account.gameName}#${data.account.tag}` : 'Unknown');
-
-            // Summoner info
-            summonerInfo.innerHTML = `
-                <div class="summoner-card">
-                    <h5>${displayName}</h5>
-                    <p>Level: ${data?.summoner?.level ?? '—'}</p>
-                </div>
-            `;
-
-            // Top champions
-            if (Array.isArray(data.topChampions) && data.topChampions.length > 0) {
-                const championsHtml = data.topChampions.map(champ => `
-                    <div class="champion-card">
-                        <p><strong>Champion ID:</strong> ${champ.championId}</p>
-                        <p><strong>Mastery Level:</strong> ${champ.championLevel}</p>
-                        <p><strong>Mastery Points:</strong> ${Number(champ.championPoints || 0).toLocaleString()}</p>
-                    </div>
-                `).join('');
-                championMastery.innerHTML = `
-                    <h5>Top Champions</h5>
-                    <div class="champions-grid">${championsHtml}</div>
-                `;
-            } else {
-                championMastery.innerHTML = '<p>No champion mastery data found.</p>';
-            }
-
-            resultsDiv.style.display = 'block';
-        }
     </script>
 </body>
 
