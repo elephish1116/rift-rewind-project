@@ -136,9 +136,11 @@ btnSD.addEventListener("click", async () => {
     return;
   }
 
+  // ⭐ 在渲染前，確保對照表已就緒（會快取，只初始化一次）
+  await initChampions();
+
   const usedTZ = json.usedTimeZone || "Asia/Taipei";
 
-  // 只保留 YYYY-MM-DD 的格式化（必要時才用）
   const formatISO = (ms, timeZone = usedTZ) => {
     try {
       return new Intl.DateTimeFormat("sv-SE", {
@@ -155,19 +157,18 @@ btnSD.addEventListener("click", async () => {
   const evs = Array.isArray(json.events) ? json.events : [];
   evs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-  // Highlights（前5筆）維持原本只顯示成就標籤
   const badges = evs.length
     ? evs.slice(0, 5).map(e =>
         `<span class="pill mini mono">${(e.notes || []).join(" · ")}</span>`
       ).join(" ")
     : `<span class="mini">No notable events in range</span>`;
 
-  // 明細：只顯示 YYYY-MM-DD，不再顯示「X月Y日」
+  // ⭐ 用 champName() 由 id 轉名稱（找不到時它會自動回 "#<id>"）
   const items = evs.length
     ? `<ul class="list">
         ${evs.map(e => {
           const dateISO = e.dateISO || (e.timestamp ? formatISO(e.timestamp) : "");
-          const champ = e.championName || (e.championId ? `#${e.championId}` : "Unknown");
+          const champ = (e.championId != null) ? champName(e.championId) : "Unknown";
           const notes = Array.isArray(e.notes) ? e.notes.join("、") : "";
           const err = e.error ? `<span class="mini warn">(${e.error})</span>` : "";
 
