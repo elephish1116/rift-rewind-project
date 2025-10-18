@@ -117,97 +117,98 @@ btnStyle.addEventListener("click", async () => {
 
 // ----- Special Days -----
 btnSD.addEventListener("click", async () => {
-    if (!current.puuid) return msg("Please look up a summoner first.", "error");
-    const cnt = el("countSD").value || "50";
-    const qs = new URLSearchParams({
-        puuid: current.puuid,
-        regional: current.regional,
-        count: String(cnt),
-        ...(current.platform ? { platform: current.platform } : {}),
-        ...(current.locale ? { locale: current.locale } : {}),
-    })
-    // const url = `${URL_SD}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&count=${cnt}`;
-    const url = `${URL_SD}?${qs.toString()}`;
-    const { status, json } = await safeFetch(url);
-    if (status !== 200) { msg(json.error || "Special-days API failed", "error"); return; }
-    const usedTZ = json.usedTimezone || "UTC";
-    const formatMD = (ms, timeZone = usedTZ) => {
-        try {
-            const parts = new Intl.DateTimeFormat("en-US", {
-                month: "numeric",
-                day: "numeric",
-                timeZone,
-            }).formatToParts(new Date(ms));
-            const m = parts.find(p => p.type === "month")?.value;
-            const d = parts.find(p => p.type === "day")?.value;
-            return (m && d) ? `${m}/${d}` : "";
-        } catch {
-            return "";
-        }
-    };
-    const formatISO = (ms, timeZone = usedTZ) => {
-        try {
-            return new Intl.DateTimeFormat("sv_SE", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                timeZone,
-            }).format(new Date(ms));
-        } catch {
-            return "";
-        }
-    };
-    const evs = Array.isArray(json.events) ? json.events : [];
-    evs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    const badges = evs.length
-      ? evs.slice(0, 5).map(e => `<span class="pill mini mono">${(e.notes || []).join(" · ")}</span>`).join(" ")
-      : `<span class="mini">No notable events in range</span>`;
-    const items = evs.length
-      ? `<ul class="list">
-            ${evs.map(e => {
-                const dateMD = e.dateMD || (e.timestamp ? formatMD(e.timestamp) : "");
-                const dateISO = e.dateISO || (e.timestamp ? formatISO(e.timestamp) : "");
-                const champ = e.championName || (e.championId ? `#${e.championId}` : "Unknown");
-                const notes = Array.isArray(e.notes) ? e.notes.join(", ") : "";
-                const err = e.error ? `<span class="mini warn">(${e.error})</span>` : "";
+  if (!current.puuid) return msg("Please look up a summoner first.", "error");
 
-                return `<li class="list-item">
-                    <span class="mono">${dateMD || "-"}</span>
-                    <span class="mini dim">(${dateISO || "-"})</span>
-                    <span> · </span>
-                    <strong>${champ}</strong>
-                    <span> · </span>
-                    <span>${notes}</span>
-                    ${err}
-                </li>`;
-            }).join("")}
-        </ul>`
-      : `<div class="mini dim" style="margin-top:6px;">No events to show.</div>`;
-    const tzInfo = json.usedTimeZone
-      ? `<div class="mini dim">Time zone: <span class="mono">${json.usedTimeZone}</span>${json.timeZoneSource ? ` <span class="dim">[${json.timeZoneSource}]</span>` : ""}</div>`
-      : `<div class="mini dim">Time zone: <span class="mono">${usedTZ}</span> (front-end)</div>`;
-    
+  const cnt = el("countSD").value || "50";
 
-    el("sd-out").innerHTML = `
-      <div class="grid">
-        <div class="card mini"><strong>Max Win Streak</strong><br>${json.maxWinStreak || 0}</div>
-        <div class="card mini"><strong>Max Lose Streak</strong><br>${json.maxLoseStreak || 0}</div>
-        <div class="card mini"><strong>Current Win Streak</strong><br>${json.recentWinStreak || 0}</div>
-        <div class="card mini"><strong>Current Lose Streak</strong><br>${json.recentLoseStreak || 0}</div>
-      </div>
+  const qs = new URLSearchParams({
+    puuid: current.puuid,
+    regional: current.regional,
+    count: String(cnt),
+    ...(current.platform ? { platform: current.platform } : {}),
+    ...(current.locale ? { locale: current.locale } : {}),
+  });
 
-      ${tzInfo}
+  const url = `${URL_SD}?${qs.toString()}`;
+  const { status, json } = await safeFetch(url);
+  if (status !== 200) {
+    msg(json.error || "Special-days API failed", "error");
+    return;
+  }
 
-      <div class="section-title mini" style="margin-top:8px;"><strong>Highlights</strong></div>
-      <div>${badges}</div>
+  const usedTZ = json.usedTimeZone || "Asia/Taipei";
 
-      <div class="section-title mini" style="margin-top:12px;"><strong>All Special Days</strong></div>
-      ${items}
-      
-      ${json.partial ? '<div class="mini warn" style="margin-top:6px;">Partial result (timeout-safe). Reduce count or fetch again.</div>' : ''}
-    `;
-    msg(json.partial ? "Partial special-days loaded." : "Special days loaded.");
+  // 只保留 YYYY-MM-DD 的格式化（必要時才用）
+  const formatISO = (ms, timeZone = usedTZ) => {
+    try {
+      return new Intl.DateTimeFormat("sv-SE", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone,
+      }).format(new Date(ms));
+    } catch {
+      return "";
+    }
+  };
+
+  const evs = Array.isArray(json.events) ? json.events : [];
+  evs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+  // Highlights（前5筆）維持原本只顯示成就標籤
+  const badges = evs.length
+    ? evs.slice(0, 5).map(e =>
+        `<span class="pill mini mono">${(e.notes || []).join(" · ")}</span>`
+      ).join(" ")
+    : `<span class="mini">No notable events in range</span>`;
+
+  // 明細：只顯示 YYYY-MM-DD，不再顯示「X月Y日」
+  const items = evs.length
+    ? `<ul class="list">
+        ${evs.map(e => {
+          const dateISO = e.dateISO || (e.timestamp ? formatISO(e.timestamp) : "");
+          const champ = e.championName || (e.championId ? `#${e.championId}` : "Unknown");
+          const notes = Array.isArray(e.notes) ? e.notes.join("、") : "";
+          const err = e.error ? `<span class="mini warn">(${e.error})</span>` : "";
+
+          return `<li class="list-item">
+            <span class="mono">${dateISO || "—"}</span>
+            <span> · </span>
+            <strong>${champ}</strong>
+            <span> · </span>
+            <span>${notes}</span>
+            ${err}
+          </li>`;
+        }).join("")}
+      </ul>`
+    : `<div class="mini dim" style="margin-top:6px;">No events to show.</div>`;
+
+  const tzInfo = json.usedTimeZone
+    ? `<div class="mini dim">Time zone: <span class="mono">${json.usedTimeZone}</span>${json.timeZoneSource ? ` <span class="dim">[${json.timeZoneSource}]</span>` : ""}</div>`
+    : `<div class="mini dim">Time zone: <span class="mono">${usedTZ}</span> (front-end)</div>`;
+
+  el("sd-out").innerHTML = `
+    <div class="grid">
+      <div class="card mini"><strong>Max Win Streak</strong><br>${json.maxWinStreak || 0}</div>
+      <div class="card mini"><strong>Max Lose Streak</strong><br>${json.maxLoseStreak || 0}</div>
+      <div class="card mini"><strong>Current Win Streak</strong><br>${json.recentWinStreak || 0}</div>
+      <div class="card mini"><strong>Current Lose Streak</strong><br>${json.recentLoseStreak || 0}</div>
+    </div>
+
+    ${tzInfo}
+
+    <div class="section-title mini" style="margin-top:8px;"><strong>Highlights</strong></div>
+    <div>${badges}</div>
+
+    <div class="section-title mini" style="margin-top:12px;"><strong>All Special Days</strong></div>
+    ${items}
+
+    ${json.partial ? '<div class="mini warn" style="margin-top:6px;">Partial result (timeout-safe). Reduce count or fetch again.</div>' : ''}
+  `;
+
+  msg(json.partial ? "Partial special-days loaded." : "Special days loaded.");
 });
+
 
 // ----- Champion Stats (with paging) -----
 btnCh.addEventListener("click", async () => {
