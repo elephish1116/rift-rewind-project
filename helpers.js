@@ -38,11 +38,11 @@ export const fmtRank = (e) => {
   return `${e.tier} ${e.rank || ""} – ${e.leaguePoints || 0} LP (${e.wins || 0}-${e.losses || 0}, ${wr}% WR) · ${q}`;
 };
 
-export const htmlForChampions = (j) => {
+export const htmlForChampions = (j, nameOf) => {
   const cell = (x) =>
-    `<div class="card mini"><strong>#${x.championId}</strong><br>${(x.winRate * 100).toFixed(0)}% WR · KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`;
+    `<div class="card mini"><strong>${nameOf(x.championId)}</strong><br>${(x.winRate * 100).toFixed(0)}% WR · KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`;
   const simpleCell = (x) =>
-    `<div class="card mini"><strong>#${x.championId}</strong><br>KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`;
+    `<div class="card mini"><strong>${nameOf(x.championId)}</strong><br>KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`;
 
   const strong = (j.strong || []).slice(0, 6).map(cell).join("");
   const weak   = (j.weak   || []).slice(0, 6).map(cell).join("");

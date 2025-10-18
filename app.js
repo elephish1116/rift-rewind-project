@@ -1,94 +1,99 @@
 import { URL_SUMMONER, URL_STYLE, URL_SD, URL_CH } from "./config.js";
 import { el, msg, safeFetch, guessRegional, fmtRank, htmlForChampions } from "./helpers.js";
+import { initChampions, champName } from "./champ.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Elements
-  const lookupBtn  = el("lookup-btn");
-  const nameInput  = el("summoner-name");
-  const regionSel  = el("region");
+document.addEventListener("DOMContentLoaded", async () => {
+    await initChampions();
+    // Elements
+    const lookupBtn  = el("lookup-btn");
+    const nameInput  = el("summoner-name");
+    const regionSel  = el("region");
 
-  const btnStyle   = el("btn-style");
-  const btnSD      = el("btn-sd");
-  const btnCh      = el("btn-ch");
-  const btnChMore  = el("btn-ch-more");
+    const btnStyle   = el("btn-style");
+    const btnSD      = el("btn-sd");
+    const btnCh      = el("btn-ch");
+    const btnChMore  = el("btn-ch-more");
 
-  // Local state
-  const current = { puuid: null, regional: null, nextStart: 0 };
+    // Local state
+    const current = { puuid: null, regional: null, nextStart: 0 };
 
-  // ----- Lookup Summoner -----
-  lookupBtn.addEventListener("click", async () => {
-    const riotId  = nameInput.value.trim();
-    const platform = regionSel.value;
+    // ----- Lookup Summoner -----
+    lookupBtn.addEventListener("click", async () => {
+        const riotId  = nameInput.value.trim();
+        const platform = regionSel.value;
 
-    if (!riotId) return msg("Please enter a Riot ID", "error");
-    if (!riotId.includes("#")) return msg("Please use Riot ID format: GameName#TAG", "error");
+        if (!riotId) return msg("Please enter a Riot ID", "error");
+        if (!riotId.includes("#")) return msg("Please use Riot ID format: GameName#TAG", "error");
 
-    lookupBtn.textContent = "Looking up...";
-    lookupBtn.disabled = true;
+        lookupBtn.textContent = "Looking up...";
+        lookupBtn.disabled = true;
 
-    try {
-      const url = `${URL_SUMMONER}?riotId=${encodeURIComponent(riotId)}&platform=${encodeURIComponent(platform)}`;
-      const { status, json } = await safeFetch(url);
-      if (status !== 200) { msg(json.error || "Failed to fetch summoner data", "error"); return; }
+        try {
+            const url = `${URL_SUMMONER}?riotId=${encodeURIComponent(riotId)}&platform=${encodeURIComponent(platform)}`;
+            const { status, json } = await safeFetch(url);
+            if (status !== 200) { msg(json.error || "Failed to fetch summoner data", "error"); return; }
 
-      // Summoner block
-      const displayName = json?.summoner?.name || (json?.account ? `${json.account.gameName}#${json.account.tag}` : "Unknown");
-      el("summoner-info").innerHTML = `
-        <div class="card">
-          <div><strong>Name:</strong> ${displayName}</div>
-          <div><strong>Level:</strong> ${json?.summoner?.level ?? "—"}</div>
-        </div>
-        <div class="card">
-          <div><strong>Top Champions:</strong></div>
-          <div class="mini">
-            ${
-              (json.topChampions || [])
-                .slice(0, 3)
-                .map((c, i) => `#${i + 1} id:${c.championId} · lvl ${c.championLevel} · ${Number(c.championPoints || 0).toLocaleString()} pts`)
-                .join("<br>") || "No mastery data"
-            }
-          </div>
-        </div>
-      `;
+            // Summoner block
+            const displayName = json?.summoner?.name || (json?.account ? `${json.account.gameName}#${json.account.tag}` : "Unknown");
+            el("summoner-info").innerHTML = `
+                <div class="card">
+                    <div><strong>Name:</strong> ${displayName}</div>
+                    <div><strong>Level:</strong> ${json?.summoner?.level ?? "—"}</div>
+                </div>
+                <div class="card">
+                    <div><strong>Top Champions:</strong></div>
+                    <div class="mini">
+                        ${
+                        (json.topChampions || [])
+                            .slice(0, 3)
+                            .map((c, i) => {
+                                const name = champName(c.championId);
+                                return `#${i + 1} ${name} · lvl ${c.championLevel} · ${Number(c.championPoints || 0).toLocaleString()} pts`;
+                            })
+                            .join("<br>") || "No mastery data"
+                        }
+                    </div>
+                </div>
+            `;
 
-      // Ranks block
-      const ranks = Array.isArray(json.ranks) ? json.ranks : [];
-      el("rank-info").innerHTML = ranks.length
-        ? ranks.map(r => `<div class="card">${fmtRank(r)}</div>`).join("")
-        : `<div class="card">Unranked</div>`;
+            // Ranks block
+            const ranks = Array.isArray(json.ranks) ? json.ranks : [];
+            el("rank-info").innerHTML = ranks.length
+                ? ranks.map(r => `<div class="card">${fmtRank(r)}</div>`).join("")
+                : `<div class="card">Unranked</div>`;
 
-      // Save state
-      current.puuid    = json?.account?.puuid || null;
-      current.regional = json?.regional || guessRegional(platform);
-      current.nextStart = 0;
+            // Save state
+            current.puuid    = json?.account?.puuid || null;
+            current.regional = json?.regional || guessRegional(platform);
+            current.nextStart = 0;
 
-      // PUUID pill + show result area
-      const pill = el("puuid-pill");
-      pill.textContent = current.puuid ? `puuid: ${current.puuid}` : "";
-      pill.style.display = current.puuid ? "inline-block" : "none";
-      el("summoner-results").style.display = "block";
+            // PUUID pill + show result area
+            const pill = el("puuid-pill");
+            pill.textContent = current.puuid ? `puuid: ${current.puuid}` : "";
+            pill.style.display = current.puuid ? "inline-block" : "none";
+            el("summoner-results").style.display = "block";
 
-      // Reset previous outputs
-      el("style-out").innerHTML = "";
-      el("sd-out").innerHTML = "";
-      el("ch-out").innerHTML = "";
-      el("pageHint").textContent = "";
+            // Reset previous outputs
+            el("style-out").innerHTML = "";
+            el("sd-out").innerHTML = "";
+            el("ch-out").innerHTML = "";
+            el("pageHint").textContent = "";
 
-      msg("Summoner found!");
-    } catch (e) {
-      console.error(e);
-      msg("Network error. Please try again.", "error");
-    } finally {
-      lookupBtn.textContent = "Look Up Summoner";
-      lookupBtn.disabled = false;
-    }
-  });
+            msg("Summoner found!");
+        } catch (e) {
+            console.error(e);
+            msg("Network error. Please try again.", "error");
+        } finally {
+            lookupBtn.textContent = "Look Up Summoner";
+            lookupBtn.disabled = false;
+        }
+});
 
-  // Enter to trigger lookup
-  nameInput.addEventListener("keypress", (e) => { if (e.key === "Enter") lookupBtn.click(); });
+// Enter to trigger lookup
+nameInput.addEventListener("keypress", (e) => { if (e.key === "Enter") lookupBtn.click(); });
 
-  // ----- Analyze Style -----
-  btnStyle.addEventListener("click", async () => {
+// ----- Analyze Style -----
+btnStyle.addEventListener("click", async () => {
     if (!current.puuid) return msg("Please look up a summoner first.", "error");
     const cnt = el("countStyle").value || "20";
     const url = `${URL_STYLE}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&count=${cnt}`;
@@ -108,10 +113,10 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
     msg("Style analyzed.");
-  });
+});
 
-  // ----- Special Days -----
-  btnSD.addEventListener("click", async () => {
+// ----- Special Days -----
+btnSD.addEventListener("click", async () => {
     if (!current.puuid) return msg("Please look up a summoner first.", "error");
     const cnt = el("countSD").value || "50";
     const url = `${URL_SD}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&count=${cnt}`;
@@ -133,24 +138,24 @@ document.addEventListener("DOMContentLoaded", () => {
       ${json.partial ? '<div class="mini warn" style="margin-top:6px;">Partial result (timeout-safe). Reduce count or fetch again.</div>' : ''}
     `;
     msg(json.partial ? "Partial special-days loaded." : "Special days loaded.");
-  });
+});
 
-  // ----- Champion Stats (with paging) -----
-  btnCh.addEventListener("click", async () => {
+// ----- Champion Stats (with paging) -----
+btnCh.addEventListener("click", async () => {
     if (!current.puuid) return msg("Please look up a summoner first.", "error");
     current.nextStart = parseInt(el("startCh").value || "0", 10) || 0;
     await loadCh(false);
-  });
+});
 
-  btnChMore.addEventListener("click", async () => { await loadCh(true); });
+btnChMore.addEventListener("click", async () => { await loadCh(true); });
 
-  async function loadCh(append) {
+async function loadCh(append) {
     const cnt = el("countCh").value || "30";
     const url = `${URL_CH}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&start=${current.nextStart}&count=${cnt}`;
     const { status, json } = await safeFetch(url);
     if (status !== 200) { msg(json.error || "Champions API failed", "error"); return; }
 
-    const block = htmlForChampions(json);
+    const block = htmlForChampions(json, champName);
     if (!append) el("ch-out").innerHTML = block;
     else el("ch-out").insertAdjacentHTML("beforeend", block);
 
