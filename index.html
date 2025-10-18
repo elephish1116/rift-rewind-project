@@ -6,95 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kasper Hsiang - Personal Website</title>
     <link rel="stylesheet" href="styles.css" />
-    <style>
-        /* 補強：讓按鈕與你網站風格一致（圓角、柔色、hover） */
-        .btn {
-            appearance: none;
-            border: 1px solid #d1d5db;
-            background: #ffffff;
-            padding: 10px 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all .15s;
-            font: inherit;
-            color: #111827;
-        }
-
-        .btn:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-        }
-
-        .btn.primary {
-            background: #111827;
-            color: #fff;
-            border-color: #111827;
-        }
-
-        .btn.primary:hover {
-            background: #0b1220;
-        }
-
-        .btn.ghost {
-            background: #f8fafc;
-        }
-
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .pill {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-size: 12px;
-            background: #eef2ff;
-            color: #3730a3;
-        }
-
-        .card {
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 10px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
-        }
-
-        .muted {
-            color: #6b7280;
-            font-size: .9rem;
-        }
-
-        .mini {
-            font-size: .85rem;
-            color: #4b5563;
-        }
-
-        .section-title {
-            margin-top: 18px;
-            margin-bottom: 6px;
-        }
-
-        .ok {
-            color: #16a34a;
-        }
-
-        .warn {
-            color: #dc2626;
-        }
-
-        .mono {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        }
-    </style>
 </head>
 
 <body>
@@ -153,11 +64,11 @@
         <!-- LEAGUE DATA LOOKUP -->
         <section class="league-lookup">
             <h3>League Data Lookup</h3>
-            <p class="muted">Enter a Riot ID to see level, ranks, style, special days and champion stats.</p>
+            <p class="muted">Enter a Riot ID to see their level, style, and other informations!</p>
             <div id="lookup-message" class="lookup-message" style="display:none;"></div>
 
             <div class="lookup-form-container card">
-                <div class="row">
+                <div class="column">
                     <div class="form-group">
                         <label for="summoner-name">Riot ID</label>
                         <input type="text" id="summoner-name" placeholder="GameName#TAG (e.g., Hide on bush#KR1)"
@@ -167,17 +78,17 @@
                     <div class="form-group">
                         <label for="region">Platform</label>
                         <select id="region">
-                            <option value="na1">North America (na1)</option>
-                            <option value="euw1">Europe West (euw1)</option>
-                            <option value="eun1">Europe Nordic & East (eun1)</option>
-                            <option value="kr" selected>Korea (kr)</option>
-                            <option value="br1">Brazil (br1)</option>
-                            <option value="la1">Latin America North (la1)</option>
-                            <option value="la2">Latin America South (la2)</option>
-                            <option value="oc1">Oceania (oc1)</option>
-                            <option value="tr1">Turkey (tr1)</option>
-                            <option value="ru">Russia (ru)</option>
-                            <option value="jp1">Japan (jp1)</option>
+                            <option value="na1">North America</option>
+                            <option value="euw1">Europe West</option>
+                            <option value="eun1">Europe Nordic & East</option>
+                            <option value="kr" selected>Korea</option>
+                            <option value="br1">Brazil</option>
+                            <option value="la1">Latin America North</option>
+                            <option value="la2">Latin America South</option>
+                            <option value="oc1">Oceania</option>
+                            <option value="tr1">Turkey</option>
+                            <option value="ru">Russia</option>
+                            <option value="jp1">Japan</option>
                         </select>
                     </div>
                 </div>
@@ -243,200 +154,9 @@
     </footer>
 
     <script src="script.js"></script>
-    <script>
-        // === Replace with your Lambda Function URLs ===
-        const URL_SUMMONER = "https://nf55sobn4zneiw4evs6x7sxjqy0vtgex.lambda-url.us-east-1.on.aws/";
-        const URL_STYLE = "https://lf7ndc45w3qazc7pnteazdjm3u0furgj.lambda-url.us-east-1.on.aws/";
-        const URL_SD = "https://fie3fo5jsucadrgvoffzwb2jci0nnqme.lambda-url.us-east-1.on.aws/";
-        const URL_CH = "https://puvy5gh5fxbhaqgm2p4dl43eee0tfhbp.lambda-url.us-east-1.on.aws/";
-        // ==============================================
-
-        const msg = (text, type = 'success') => {
-            const div = document.getElementById('lookup-message');
-            div.textContent = text; div.className = `lookup-message ${type}`;
-            div.style.display = 'block'; setTimeout(() => div.style.display = 'none', 6000);
-        };
-        const el = id => document.getElementById(id);
-        const safeFetch = async (url) => {
-            const r = await fetch(url); const t = await r.text();
-            try { return { status: r.status, json: JSON.parse(t) }; } catch { return { status: r.status, json: { _raw: t } } }
-        };
-        const guessRegional = (platform) => {
-            const asia = new Set(["kr", "jp1"]);
-            const amer = new Set(["na1", "br1", "la1", "la2"]);
-            const eu = new Set(["euw1", "eun1", "tr1", "ru"]);
-            const sea = new Set(["oc1", "ph2", "sg2", "th2", "tw2", "vn2", "id1"]);
-            if (asia.has(platform)) return "asia";
-            if (amer.has(platform)) return "americas";
-            if (eu.has(platform)) return "europe";
-            if (sea.has(platform)) return "sea";
-            return "americas";
-        };
-        const fmtRank = (e) => {
-            // league-v4 entries item: queueType, tier, rank(DIV), leaguePoints, wins, losses
-            if (!e || !e.tier) return "Unranked";
-            const q = (e.queueType || "").replaceAll("_", " ").toLowerCase();
-            const wr = e.wins + e.losses > 0 ? Math.round(e.wins * 100 / (e.wins + e.losses)) : 0;
-            return `${e.tier} ${e.rank || ""} – ${e.leaguePoints || 0} LP (${e.wins || 0}-${e.losses || 0}, ${wr}% WR) · ${q}`;
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const lookupBtn = el('lookup-btn');
-            const nameInput = el('summoner-name');
-            const regionSel = el('region');
-
-            const btnStyle = el('btn-style');
-            const btnSD = el('btn-sd');
-            const btnCh = el('btn-ch');
-            const btnChMore = el('btn-ch-more');
-
-            let current = { puuid: null, regional: null, nextStart: 0 };
-
-            lookupBtn.addEventListener('click', async () => {
-                const riotId = nameInput.value.trim();
-                const platform = regionSel.value;
-                if (!riotId) return msg('Please enter a Riot ID', 'error');
-                if (!riotId.includes('#')) return msg('Please use Riot ID format: GameName#TAG', 'error');
-
-                lookupBtn.textContent = 'Looking up...'; lookupBtn.disabled = true;
-                try {
-                    const url = `${URL_SUMMONER}?riotId=${encodeURIComponent(riotId)}&platform=${encodeURIComponent(platform)}`;
-                    const { status, json } = await safeFetch(url);
-                    if (status !== 200) { msg(json.error || 'Failed to fetch summoner data', 'error'); return; }
-
-                    // 基本資料
-                    const displayName = json?.summoner?.name || (json?.account ? `${json.account.gameName}#${json.account.tag}` : 'Unknown');
-                    el('summoner-info').innerHTML = `
-            <div class="card">
-              <div><strong>Name:</strong> ${displayName}</div>
-              <div><strong>Level:</strong> ${json?.summoner?.level ?? '—'}</div>
-            </div>
-            <div class="card">
-              <div><strong>Top Champions:</strong></div>
-              <div class="mini">
-                ${(json.topChampions || []).slice(0, 3).map((c, i) => `#${i + 1} id:${c.championId} · lvl ${c.championLevel} · ${Number(c.championPoints || 0).toLocaleString()} pts`).join('<br>')
-                        || 'No mastery data'
-                        }
-              </div>
-            </div>
-          `;
-
-                    // 段位
-                    const ranks = Array.isArray(json.ranks) ? json.ranks : [];
-                    el('rank-info').innerHTML = ranks.length
-                        ? ranks.map(r => `<div class="card">${fmtRank(r)}</div>`).join('')
-                        : `<div class="card">Unranked</div>`;
-
-                    // 狀態保存
-                    current.puuid = json?.account?.puuid || null;
-                    current.regional = json?.regional || guessRegional(platform);
-                    current.nextStart = 0;
-
-                    // 顯示/PUUID pill
-                    const pill = el('puuid-pill');
-                    pill.textContent = current.puuid ? `puuid: ${current.puuid}` : '';
-                    pill.style.display = current.puuid ? 'inline-block' : 'none';
-                    el('summoner-results').style.display = 'block';
-
-                    // 清空舊結果
-                    el('style-out').innerHTML = '';
-                    el('sd-out').innerHTML = '';
-                    el('ch-out').innerHTML = '';
-                    el('pageHint').textContent = '';
-                    msg('Summoner found!');
-                } catch (e) {
-                    console.error(e); msg('Network error. Please try again.', 'error');
-                } finally {
-                    lookupBtn.textContent = 'Look Up Summoner'; lookupBtn.disabled = false;
-                }
-            });
-
-            nameInput.addEventListener('keypress', e => { if (e.key === 'Enter') lookupBtn.click(); });
-
-            // STYLE
-            btnStyle.addEventListener('click', async () => {
-                if (!current.puuid) return msg('Please look up a summoner first.', 'error');
-                const cnt = el('countStyle').value || '20';
-                const url = `${URL_STYLE}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&count=${cnt}`;
-                const { status, json } = await safeFetch(url);
-                if (status !== 200) { msg(json.error || 'Style API failed', 'error'); return; }
-                const a = json.agg || {};
-                const tags = (json.tags || []).join(', ') || '—';
-                el('style-out').innerHTML = `
-          <div><strong>Style:</strong> ${tags}</div>
-          <div class="grid">
-            <div class="card mini"><strong>Win Rate</strong><br>${a.winRate ? Math.round(a.winRate * 100) : 0}%</div>
-            <div class="card mini"><strong>KDA</strong><br>${(a.kda || 0).toFixed(2)}</div>
-            <div class="card mini"><strong>KP</strong><br>${a.kp ? Math.round(a.kp * 100) : 0}%</div>
-            <div class="card mini"><strong>DMG / min</strong><br>${Math.round(a.dmgPerMin || 0)}</div>
-            <div class="card mini"><strong>Vision / game</strong><br>${(a.visionScorePerGame || 0).toFixed(1)}</div>
-            <div class="card mini"><strong>Obj.Part / game</strong><br>${(a.objPartPerGame || 0).toFixed(2)}</div>
-          </div>
-        `;
-                msg('Style analyzed.');
-            });
-
-            // SPECIAL DAYS
-            btnSD.addEventListener('click', async () => {
-                if (!current.puuid) return msg('Please look up a summoner first.', 'error');
-                const cnt = el('countSD').value || '50';
-                const url = `${URL_SD}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&count=${cnt}`;
-                const { status, json } = await safeFetch(url);
-                if (status !== 200) { msg(json.error || 'Special-days API failed', 'error'); return; }
-                const evs = Array.isArray(json.events) ? json.events : [];
-                const badges = evs.length ? evs.slice(0, 5).map(e => `<span class="pill mini mono">${e.notes.join(' · ')}</span>`).join(' ') : '<span class="mini">No notable events in range</span>';
-                el('sd-out').innerHTML = `
-          <div class="grid">
-            <div class="card mini"><strong>Max Win Streak</strong><br>${json.maxWinStreak || 0}</div>
-            <div class="card mini"><strong>Max Lose Streak</strong><br>${json.maxLoseStreak || 0}</div>
-            <div class="card mini"><strong>Current Win Streak</strong><br>${json.recentWinStreak || 0}</div>
-            <div class="card mini"><strong>Current Lose Streak</strong><br>${json.recentLoseStreak || 0}</div>
-          </div>
-          <div class="section-title mini"><strong>Highlights</strong></div>
-          <div>${badges}</div>
-          ${json.partial ? '<div class="mini warn" style="margin-top:6px;">Partial result (timeout-safe). Reduce count or fetch again.</div>' : ''}
-        `;
-                msg(json.partial ? 'Partial special-days loaded.' : 'Special days loaded.');
-            });
-
-            // CHAMPIONS
-            btnCh.addEventListener('click', async () => {
-                if (!current.puuid) return msg('Please look up a summoner first.', 'error');
-                current.nextStart = parseInt(el('startCh').value || '0', 10) || 0;
-                await loadCh(false);
-            });
-            btnChMore.addEventListener('click', async () => { await loadCh(true); });
-
-            async function loadCh(append) {
-                const cnt = el('countCh').value || '30';
-                const url = `${URL_CH}?puuid=${encodeURIComponent(current.puuid)}&regional=${encodeURIComponent(current.regional)}&start=${current.nextStart}&count=${cnt}`;
-                const { status, json } = await safeFetch(url);
-                if (status !== 200) { msg(json.error || 'Champions API failed', 'error'); return; }
-
-                const block = htmlForChampions(json);
-                if (!append) el('ch-out').innerHTML = block; else el('ch-out').insertAdjacentHTML('beforeend', block);
-
-                current.nextStart = (json?.nextStart ?? (current.nextStart + Number(cnt)));
-                el('pageHint').textContent = `nextStart=${current.nextStart}` + (json?.partial ? " (partial)" : "");
-                msg(json.partial ? 'Partial champions loaded.' : 'Champion stats loaded.');
-            }
-
-            function htmlForChampions(j) {
-                const strong = (j.strong || []).slice(0, 6).map(x => `<div class="card mini"><strong>#${x.championId}</strong><br>${(x.winRate * 100).toFixed(0)}% WR · KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`).join('');
-                const weak = (j.weak || []).slice(0, 6).map(x => `<div class="card mini"><strong>#${x.championId}</strong><br>${(x.winRate * 100).toFixed(0)}% WR · KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`).join('');
-                const rec = (j.recommend || []).slice(0, 6).map(x => `<div class="card mini"><strong>#${x.championId}</strong><br>KDA ${(x.kda || 0).toFixed(2)} · ${x.games} games</div>`).join('');
-                return `
-          <div class="mini"><strong>Strong picks</strong></div>
-          <div class="grid">${strong || '<div class="mini">—</div>'}</div>
-          <div class="mini" style="margin-top:10px;"><strong>Weak picks</strong></div>
-          <div class="grid">${weak || '<div class="mini">—</div>'}</div>
-          <div class="mini" style="margin-top:10px;"><strong>Try these</strong></div>
-          <div class="grid">${rec || '<div class="mini">—</div>'}</div>
-          ${j.partial ? '<div class="mini warn" style="margin-top:6px;">Partial result – click Load More to continue.</div>' : ''}
-        `;
-            }
-        });
-    </script>
+    <script type="module" src="config.js"></script>
+    <script type="module" src="helpers.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>

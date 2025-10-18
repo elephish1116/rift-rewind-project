@@ -564,3 +564,123 @@ footer {
     }
 }
 /* END LEAGUE LOOKUP STYLES */
+/* === League Lookup – supplemental utilities (theme-aligned) === */
+
+/* 通用按鈕（外觀對齊你的 .lookup-submit-btn / .contact-submit-btn） */
+.btn {
+    appearance: none;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #232f3e;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    background: #f8fafc;
+}
+
+.btn:disabled {
+    background: #9ca3af;
+    color: #fff;
+    cursor: not-allowed;
+}
+
+.btn.primary {
+    background: #c89b3c;
+    /* 金色主色 */
+    border-color: #c89b3c;
+    color: #ffffff;
+}
+
+.btn.primary:hover {
+    background: #b8862e;
+}
+
+.btn.ghost {
+    background: #f8fafc;
+    border-color: #e5e7eb;
+    color: #232f3e;
+}
+
+/* 橫向排列工具列（Analyze 區塊用） */
+.row,
+.api-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+/* 小卡片（沿用你的卡片風格） */
+.card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+/* 簡易網格（小統計卡片用） */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.section-title {
+    margin: 4px 0 8px;
+    color: #232f3e;
+}
+
+/* 輕量標籤（Highlights 使用） */
+.pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: #fff7ed;
+    /* 淡金色背景 */
+    border: 1px solid #fde68a;
+    /* 與主色系協調 */
+    color: #92400e;
+    margin: 2px 4px 2px 0;
+}
+
+/* 小字 & Mono 工具類 */
+.mini {
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.muted {
+    color: #687078;
+    font-size: 0.95rem;
+}
+
+.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* 補齊 rank/統計卡片的樣式一致性（用到 .card 已足夠，這裡只是保底） */
+.rank-card,
+.stat-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+/* 讓 champions 區塊的卡片距離更舒服 */
+#ch-out .card {
+    margin-top: 8px;
+}
+
+/* 手機優化：Analyze 操作列在小螢幕換行 */
+@media (max-width: 768px) {
+    .api-row {
+        gap: 8px;
+    }
+}
