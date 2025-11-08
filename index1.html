@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kasper Hsiang - Personal Website</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <main>
+        <section class="hero">
+            <img src="profile-photo.svg" alt="Kasper Hsiang" class="profile-photo">
+            <h1>Kasper Hsiang</h1>
+            <p class="tagline">Cloud Builder & AWS Enthusiast</p>
+            <a href="https://builder.aws.com/community/@elephish" target="_blank" class="aws-link">AWS Builder Center
+                Profile</a>
+        </section>
+
+        <section class="fun-facts">
+            <h3>Fun Facts About Me</h3>
+            <div class="facts-grid">
+                <div class="fact-card">
+                    <h4>🚀 Challenge In Progress</h4>
+                    <p>Currently working on <a
+                            href="https://builder.aws.com/content/32eo2kkwuKdMw2Ej2WWgTKRj7yP/pro-deploy-mode-github-amplify-and-modern-development-for-rift-rewind"
+                            target="_blank">AWS Builder Challenge #5: GitHub, Amplify, and Modern Development for Rift
+                            Rewind!</a></p>
+                </div>
+                <div class="fact-card">
+                    <h4>🎯 Learning Goal</h4>
+                    <p>Building my skills one AWS service at a time - S3, CloudFront, and beyond!</p>
+                </div>
+                <div class="fact-card">
+                    <h4>💡 Fun Project</h4>
+                    <p>This website is hosted on Amazon S3 with CloudFront for global delivery!</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="aws-journey">
+            <h3>AWS Builder Challenge #2</h3>
+            <p>I'm currently working on the "Build a website on the cloud" challenge, learning to deploy websites using
+                AWS S3 and CloudFront. This site is part of my challenge progress!</p>
+            <a href="https://builder.aws.com/content/31C2WxIDSQive7q2Dv5xNFCmYJj/aws-builder-challenge-2-build-a-website-on-the-cloud?trk=86c76c09-e8f4-4138-badc-604ce7bc5d77&sc_channel=el"
+                target="_blank" class="cta-button">View Challenge Details</a>
+        </section>
+
+        <!-- CONTACT FORM -->
+        <section class="contact-form">
+            <h3>Get In Touch</h3>
+            <p>Have a question or want to connect? Send me a message!</p>
+            <div id="form-message" class="form-message" style="display:none;"></div>
+            <form class="contact-form-container">
+                <div class="form-group"><label for="name">Name</label><input type="text" id="name" required></div>
+                <div class="form-group"><label for="email">Email</label><input type="email" id="email" required></div>
+                <div class="form-group"><label for="message">Message</label><textarea id="message" rows="5"
+                        required></textarea></div>
+                <button type="submit" class="contact-submit-btn">Send Message</button>
+            </form>
+        </section>
+
+        <!-- LEAGUE DATA LOOKUP -->
+        <section class="league-lookup">
+            <h3>League Data Lookup</h3>
+            <p class="muted">Enter a Riot ID to see their level, style, and other informations!</p>
+            <div id="lookup-message" class="lookup-message" style="display:none;"></div>
+
+            <div class="lookup-form-container card">
+                <div class="column">
+                    <div class="form-group">
+                        <label for="summoner-name">Riot ID</label>
+                        <input type="text" id="summoner-name" placeholder="GameName#TAG (e.g., Hide on bush#KR1)"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="region">Platform</label>
+                        <select id="region">
+                            <option value="na1">North America</option>
+                            <option value="euw1">Europe West</option>
+                            <option value="eun1">Europe Nordic & East</option>
+                            <option value="kr" selected>Korea</option>
+                            <option value="br1">Brazil</option>
+                            <option value="la1">Latin America North</option>
+                            <option value="la2">Latin America South</option>
+                            <option value="oc1">Oceania</option>
+                            <option value="tr1">Turkey</option>
+                            <option value="ru">Russia</option>
+                            <option value="jp1">Japan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <button type="button" id="lookup-btn" class="lookup-submit-btn">Look Up Summoner</button>
+                    <span id="puuid-pill" class="pill mono" style="display:none;"></span>
+                </div>
+            </div>
+
+            <div id="summoner-results" style="display:none;">
+                <!-- Summoner summary -->
+                <div class="card">
+                    <h4 class="section-title">Summoner</h4>
+                    <div id="summoner-info" class="grid"></div>
+                </div>
+
+                <!-- Ranks summary -->
+                <div class="card">
+                    <h4 class="section-title">Ranks</h4>
+                    <div id="rank-info" class="grid"></div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <h4 class="section-title">Analyze</h4>
+
+                    <!-- 新版：每個功能各佔一行 -->
+                    <div class="analyze-controls">
+
+                        <!-- Analyze Style -->
+                        <div class="tool">
+                            <button id="btn-style" class="btn">Analyze Style</button>
+                            <label for="countStyle">Count</label>
+                            <input id="countStyle" type="number" value="20" min="1" max="100">
+                        </div>
+
+                        <!-- Special Days -->
+                        <div class="tool">
+                            <button id="btn-sd" class="btn">Special Days</button>
+                            <label for="countSD">Count</label>
+                            <input id="countSD" type="number" value="50" min="1" max="200">
+                        </div>
+
+                        <!-- Champion Stats -->
+                        <div class="tool">
+                            <button id="btn-ch" class="btn">Champion Stats</button>
+                            <label for="startCh">Start</label>
+                            <input id="startCh" type="number" value="0" min="0">
+                            <label for="countCh">Count</label>
+                            <input id="countCh" type="number" value="30" min="1" max="50">
+                            <button id="btn-ch-more" class="btn ghost">Load More</button>
+                            <span id="pageHint" class="mini mono"></span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="card">
+                    <h4 class="section-title">Style Result</h4>
+                    <div id="style-out" class="mini"></div>
+                </div>
+
+                <div class="card special-days">
+                    <h4 class="section-title">Special Days</h4>
+                    <div id="sd-out" class="mini"></div>
+                </div>
+
+                <div class="card">
+                    <h4 class="section-title">Champion Highlights</h4>
+                    <div id="ch-out" class="mini"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Kasper Hsiang. Built with ❤️ on AWS</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script type="module" src="config.js"></script>
+    <script type="module" src="helpers.js"></script>
+    <script type="module" src="champs.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>
