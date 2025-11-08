@@ -1,4 +1,3 @@
-// const LAMBDA_STATS_URL = 'https://h2unirbnaisgy33o75ualduq2u0tovkb.lambda-url.ap-southeast-2.on.aws/'; // ← Replace
 const LAMBDA_STATS_URL = 'https://2flb553cqg4egpc33lyuasxbte0xvcdf.lambda-url.ap-southeast-2.on.aws/';
 document.addEventListener('DOMContentLoaded', function() {
   const playerForm = document.querySelector('.player-form');
@@ -444,7 +443,7 @@ function renderStyleAnalysisCard(data) {
   const cells = [
     ['Kills / game', fmtNum(sp.kills_pg)],
     ['Deaths / game', fmtNum(sp.deaths_pg)],
-    ['Assists / game', '—'], // 後端若加上可直接填 sp.assists_pg
+    ['Assists / game', fmtNum(sp.assists_pg)],
     ['KP', pf['KP'] != null ? pf['KP'].toFixed(1) + '%' : '—'],
     ['DMG%', pf['DMG%'] != null ? pf['DMG%'].toFixed(1) + '%' : '—'],
     ['DTH%', pf['DTH%'] != null ? pf['DTH%'].toFixed(1) + '%' : '—'],
