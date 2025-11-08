@@ -103,26 +103,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h3 class="text-text-primary text-lg font-bold mb-4 text-center">Your Best Match</h3>
                 <div id="miniMatchCard"></div>
               </div>
-              <!-- NEW: Style Analysis Card -->
+              <!-- NEW: Style Analysis (no paragraph, bars + stats + tags) -->
               <div class="rounded-lg border border-border bg-card p-6 h-full" id="styleCard">
                 <h3 class="text-text-primary text-lg font-bold mb-4 text-center">Style Analysis</h3>
-                <p id="styleAnalysisText" class="text-text-secondary text-sm leading-6 mb-4 text-center"></p>
 
+                <!-- 四個主風格百分比條 -->
+                <div id="styleBars" class="space-y-3 mb-4"></div>
+
+                <!-- 詳細資料 -->
+                <div class="grid grid-cols-2 gap-3 mb-4" id="styleProfile"></div>
+
+                <!-- Tags -->
                 <div>
                   <h4 class="text-text-secondary text-xs font-medium mb-2">Tags</h4>
                   <div id="styleTags" class="flex flex-wrap gap-2"></div>
                 </div>
 
+                <!-- 理由（保留可展開） -->
                 <div class="mt-4">
                   <details id="styleReasonsWrap" class="rounded-md border border-border">
                     <summary class="px-3 py-2 cursor-pointer select-none">Why these tags?</summary>
                     <ul id="styleReasons" class="px-4 py-3 list-disc marker:text-text-secondary/80 space-y-1"></ul>
                   </details>
                 </div>
-
-                <div class="mt-4 grid grid-cols-2 gap-3" id="styleProfile"></div>
-
-                <div class="mt-4 text-xs text-text-secondary" id="visionBrief"></div>
               </div>
             </section>
 
@@ -382,24 +385,90 @@ function renderRecommendations(recData) {
 
 
 function renderStyleAnalysisCard(data) {
-  const textEl = document.getElementById('styleAnalysisText');
   const tagsEl = document.getElementById('styleTags');
   const reasonsWrap = document.getElementById('styleReasonsWrap');
   const reasonsEl = document.getElementById('styleReasons');
   const profileEl = document.getElementById('styleProfile');
-  const visionEl = document.getElementById('visionBrief');
+  const barsEl = document.getElementById('styleBars');
   const card = document.getElementById('styleCard');
-
   if (!card) return;
 
-  // 文字分析
-  textEl.textContent = data.style_analysis || '—';
+  // ===== 1) 計算四個主風格分數 =====
+  const pf = data.player_features || {};
+  const sp = data.style_profile || {};
+  const vs = data.vision || {};
 
-  // 標籤徽章
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const toPct = v => Math.round(clamp01(v) * 100);
+
+  const scoreEarly   = toPct(sp.early_k_frac ?? 0);             // 0..100
+  const scoreScaling = toPct(sp.late_k_frac ?? 0);
+
+  // Teamfight carry: 輸出 + 參團
+  const sTeamfight =
+    clamp01(((pf['DMG%'] || 0) / 30) * 0.6 + ((pf['KP'] || 0) / 65) * 0.4);
+  const scoreTeamfight = toPct(sTeamfight);
+
+  // Vision control: 視野分 + 掃眼 + 插眼
+  const sVision = clamp01(
+    ((vs.placed || 0) / 12) * 0.2 +
+    ((vs.killed || 0) / 2) * 0.3 +
+    ((data.visionScore?.avgVision || data.vision?.avgVision || 0) / 30) * 0.5
+  );
+  const scoreVision = toPct(sVision);
+
+  const bars = [
+    ['Early Pressure', scoreEarly],
+    ['Scaling',        scoreScaling],
+    ['Teamfight Carry',scoreTeamfight],
+    ['Vision Control', scoreVision],
+  ];
+
+  barsEl.innerHTML = '';
+  bars.forEach(([label, val]) => {
+    const row = document.createElement('div');
+    row.innerHTML = `
+      <div class="flex items-center justify-between text-xs mb-1">
+        <span class="text-text-secondary">${label}</span>
+        <span class="font-semibold">${val}%</span>
+      </div>
+      <div class="w-full h-2 rounded-full bg-border overflow-hidden">
+        <div class="h-2 bg-primary" style="width:${val}%"></div>
+      </div>
+    `;
+    barsEl.appendChild(row);
+  });
+
+  // ===== 2) 詳細資料（可用就顯示） =====
+  profileEl.innerHTML = '';
+  const cells = [
+    ['Kills / game', fmtNum(sp.kills_pg)],
+    ['Deaths / game', fmtNum(sp.deaths_pg)],
+    ['Assists / game', '—'], // 後端若加上可直接填 sp.assists_pg
+    ['KP', pf['KP'] != null ? pf['KP'].toFixed(1) + '%' : '—'],
+    ['DMG%', pf['DMG%'] != null ? pf['DMG%'].toFixed(1) + '%' : '—'],
+    ['DTH%', pf['DTH%'] != null ? pf['DTH%'].toFixed(1) + '%' : '—'],
+    ['CSPM', fmtNum(pf['CSPM'])],
+    ['DPM', pf['DPM_user'] != null ? pf['DPM_user'].toFixed(0) : '—'],
+    ['GOLD%', pf['GOLD%'] != null ? pf['GOLD%'].toFixed(1) + '%' : '—'],
+    ['Wards placed / game', fmtNum(data.vision?.placed)],
+    ['Wards cleared / game', fmtNum(data.vision?.killed)],
+  ];
+  cells.forEach(([k, v]) => {
+    const div = document.createElement('div');
+    div.className = 'rounded-md border border-border p-3';
+    div.innerHTML = `
+      <div class="text-xs text-text-secondary">${k}</div>
+      <div class="text-base font-bold">${v}</div>
+    `;
+    profileEl.appendChild(div);
+  });
+
+  // ===== 3) 副詞條（tags） =====
   tagsEl.innerHTML = '';
   (data.style_tags || []).forEach(t => tagsEl.appendChild(makeTagBadge(t)));
 
-  // 理由
+  // ===== 4) 理由（可收合） =====
   const reasons = data.style_tag_reasons || {};
   const keys = Object.keys(reasons);
   reasonsEl.innerHTML = '';
@@ -414,39 +483,8 @@ function renderStyleAnalysisCard(data) {
       reasonsEl.appendChild(li);
     });
   }
-
-  // Profile 小卡
-  const prof = data.style_profile || {};
-  profileEl.innerHTML = '';
-  const kv = [
-    ['Kills / game', fmtNum(prof.kills_pg)],
-    ['Deaths / game', fmtNum(prof.deaths_pg)],
-    ['Early kill share', pct(prof.early_k_frac)],
-    ['Late kill share',  pct(prof.late_k_frac)],
-  ];
-  kv.forEach(([k, v]) => {
-    const div = document.createElement('div');
-    div.className = 'rounded-md border border-border p-3';
-    div.innerHTML = `
-      <div class="text-xs text-text-secondary">${k}</div>
-      <div class="text-base font-bold">${v}</div>
-    `;
-    profileEl.appendChild(div);
-  });
-
-  // 視野補充
-  const v = data.vision || {};
-  visionEl.textContent = (v.placed != null || v.killed != null)
-    ? `Vision: wards placed ≈ ${fmtNum(v.placed)} · wards cleared ≈ ${fmtNum(v.killed)}`
-    : '';
-
-  // 若完全沒有資料，也讓卡片顯示為空態
-  if (!data.style_analysis && !(data.style_tags || []).length) {
-    card.innerHTML = `
-      <div class="text-center text-text-secondary">No style data available.</div>
-    `;
-  }
 }
+
 
 function makeTagBadge(name) {
   const span = document.createElement('span');
