@@ -86,8 +86,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="player-stats">
             <h2>Player Insights</h2>
 
-            <!-- first row: Champion Stats + Best Match -->
-            <section class="grid gap-8 py-6 items-stretch max-w-[1400px] mx-auto">
+            <!-- first row: Champion Stats + Best Match + Style Analysis-->
+            <section class="grid gap-8 py-6 items-stretch max-w-[1400px] mx-auto md:grid-cols-2 xl:grid-cols-3">
               <div class="flex flex-col justify-between rounded-lg border border-border bg-card p-6 h-full">
                 <h3 class="text-text-primary text-lg font-bold mb-6 text-center">Champion Stats</h3>
                 <div>
@@ -102,6 +102,27 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="rounded-lg border border-border bg-card p-6 h-full">
                 <h3 class="text-text-primary text-lg font-bold mb-4 text-center">Your Best Match</h3>
                 <div id="miniMatchCard"></div>
+              </div>
+              <!-- NEW: Style Analysis Card -->
+              <div class="rounded-lg border border-border bg-card p-6 h-full" id="styleCard">
+                <h3 class="text-text-primary text-lg font-bold mb-4 text-center">Style Analysis</h3>
+                <p id="styleAnalysisText" class="text-text-secondary text-sm leading-6 mb-4 text-center"></p>
+
+                <div>
+                  <h4 class="text-text-secondary text-xs font-medium mb-2">Tags</h4>
+                  <div id="styleTags" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="mt-4">
+                  <details id="styleReasonsWrap" class="rounded-md border border-border">
+                    <summary class="px-3 py-2 cursor-pointer select-none">Why these tags?</summary>
+                    <ul id="styleReasons" class="px-4 py-3 list-disc marker:text-text-secondary/80 space-y-1"></ul>
+                  </details>
+                </div>
+
+                <div class="mt-4 grid grid-cols-2 gap-3" id="styleProfile"></div>
+
+                <div class="mt-4 text-xs text-text-secondary" id="visionBrief"></div>
               </div>
             </section>
 
@@ -135,6 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.timeline) renderTimeline(data.timeline);
         if (data.common_champions) renderChampions(data.common_champions);
         if (data.champion_recommendation) renderRecommendations(data.champion_recommendation);
+        renderStyleAnalysisCard(data);
+
       }
     } catch (err) {
       showLookupMessage(`⚠️ Network or CORS error: ${err}`, 'error');
@@ -355,4 +378,106 @@ function renderRecommendations(recData) {
       <p class="reason-text">${escapeHtml(c.reason || 'No reason provided.')}</p>
     </div>
   `).join('');
+}
+
+
+function renderStyleAnalysisCard(data) {
+  const textEl = document.getElementById('styleAnalysisText');
+  const tagsEl = document.getElementById('styleTags');
+  const reasonsWrap = document.getElementById('styleReasonsWrap');
+  const reasonsEl = document.getElementById('styleReasons');
+  const profileEl = document.getElementById('styleProfile');
+  const visionEl = document.getElementById('visionBrief');
+  const card = document.getElementById('styleCard');
+
+  if (!card) return;
+
+  // 文字分析
+  textEl.textContent = data.style_analysis || '—';
+
+  // 標籤徽章
+  tagsEl.innerHTML = '';
+  (data.style_tags || []).forEach(t => tagsEl.appendChild(makeTagBadge(t)));
+
+  // 理由
+  const reasons = data.style_tag_reasons || {};
+  const keys = Object.keys(reasons);
+  reasonsEl.innerHTML = '';
+  if (keys.length === 0) {
+    reasonsWrap.open = false;
+    reasonsWrap.style.display = 'none';
+  } else {
+    reasonsWrap.style.display = 'block';
+    keys.forEach(k => {
+      const li = document.createElement('li');
+      li.textContent = `[${k}] ${reasons[k]}`;
+      reasonsEl.appendChild(li);
+    });
+  }
+
+  // Profile 小卡
+  const prof = data.style_profile || {};
+  profileEl.innerHTML = '';
+  const kv = [
+    ['Kills / game', fmtNum(prof.kills_pg)],
+    ['Deaths / game', fmtNum(prof.deaths_pg)],
+    ['Early kill share', pct(prof.early_k_frac)],
+    ['Late kill share',  pct(prof.late_k_frac)],
+  ];
+  kv.forEach(([k, v]) => {
+    const div = document.createElement('div');
+    div.className = 'rounded-md border border-border p-3';
+    div.innerHTML = `
+      <div class="text-xs text-text-secondary">${k}</div>
+      <div class="text-base font-bold">${v}</div>
+    `;
+    profileEl.appendChild(div);
+  });
+
+  // 視野補充
+  const v = data.vision || {};
+  visionEl.textContent = (v.placed != null || v.killed != null)
+    ? `Vision: wards placed ≈ ${fmtNum(v.placed)} · wards cleared ≈ ${fmtNum(v.killed)}`
+    : '';
+
+  // 若完全沒有資料，也讓卡片顯示為空態
+  if (!data.style_analysis && !(data.style_tags || []).length) {
+    card.innerHTML = `
+      <div class="text-center text-text-secondary">No style data available.</div>
+    `;
+  }
+}
+
+function makeTagBadge(name) {
+  const span = document.createElement('span');
+  span.textContent = name;
+  span.className = 'text-xs px-2.5 py-1 rounded-full border';
+  // 顏色映射（和我前面建議一致）
+  const colorMap = {
+    'teamfight-carry':'#8ab4ff',
+    'early-pressure':'#ffad60',
+    'scaling':'#c58aff',
+    'roamer':'#8bd7a8',
+    'power-farmer':'#ffd166',
+    'split-pusher':'#ff7b7b',
+    'vision-control':'#7bd7ff',
+    'low-risk':'#a5d6a7',
+    'high-risk':'#ef9a9a',
+    'aggressive':'#f28b82',
+    'safe':'#81c995',
+    'team-oriented':'#fdd663',
+    'balanced':'#cfcfcf'
+  };
+  span.style.borderColor = colorMap[name] || '#666';
+  return span;
+}
+
+function fmtNum(x) {
+  if (x == null || Number.isNaN(x)) return '—';
+  const n = Number(x);
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}
+function pct(x) {
+  if (x == null || Number.isNaN(Number(x))) return '—';
+  return (Number(x) * 100).toFixed(1) + '%';
 }
