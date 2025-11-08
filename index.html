@@ -1,66 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WX - Personal Website</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WX - Personal Website</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#8A2BE2",
+            "background-light": "#f5f8f8",
+            "background-dark": "#120D1A",
+            card: "#1E1A2A",
+            border: "#312B44",
+            "text-primary": "#F5F5F5",
+            "text-secondary": "#A19CB0",
+          },
+          fontFamily: {
+            display: ["Space Grotesk", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    body::before {
+      display: none !important;
+    }
+  </style>
 </head>
-<body>
-    <main>
-        <section class="player-lookup">
-            <h3>League of Legends Player Lookup</h3>
-            <p>Enter your Riot ID and Tag</p>
+<body class="dark bg-background-dark font-display text-text-primary">
+  <main class="flex flex-1 flex-col px-4 py-8 sm:px-6 md:px-8 lg:px-10">
+    <!-- ======== 窄容器：標題與查詢 ======== -->
+    <div class="mx-auto w-full max-w-3xl">
+      <section
+        class="flex flex-col items-center justify-center gap-6 py-10 text-center md:py-16"
+      >
+        <div class="flex flex-col gap-2">
+          <h1
+            class="text-text-primary text-4xl font-black leading-tight tracking-[-0.033em] sm:text-5xl"
+          >
+            League of Legends Player Lookup
+          </h1>
+          <h2 class="text-text-secondary text-sm font-normal sm:text-base">
+            Enter your Riot ID and Tag to analyze your gameplay.
+          </h2>
+        </div>
 
-            <div id="lookup-message" class="form-message" style="display: none;"></div>
+        <form
+          class="player-form grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 bg-card p-6 rounded-lg border border-border"
+        >
+          <div class="flex flex-col items-start gap-2 text-left">
+            <label
+              class="text-sm font-medium text-text-secondary"
+              for="riot_id"
+              >Riot ID</label
+            >
+            <input
+              class="form-input h-12 w-full rounded-lg border border-border bg-background-dark px-4 text-text-primary placeholder:text-text-secondary focus:border-primary focus:ring-2 focus:ring-primary/50"
+              id="riot_id"
+              name="riot_id"
+              placeholder="Hide on bush"
+              required
+            />
+          </div>
+          <div class="flex flex-col items-start gap-2 text-left">
+            <label
+              class="text-sm font-medium text-text-secondary"
+              for="tag"
+              >Tag</label
+            >
+            <input
+              class="form-input h-12 w-full rounded-lg border border-border bg-background-dark px-4 text-text-primary placeholder:text-text-secondary focus:border-primary focus:ring-2 focus:ring-primary/50"
+              id="tag"
+              name="tag"
+              placeholder="KR1"
+              required
+            />
+          </div>
+          <div
+            class="flex flex-col items-start gap-2 text-left sm:col-span-2 md:col-span-1"
+          >
+            <label
+              class="text-sm font-medium text-text-secondary"
+              for="platform"
+              >Server / Region</label
+            >
+            <select
+              id="platform"
+              name="platform"
+              class="form-select h-12 w-full rounded-lg border border-border bg-background-dark px-4 text-text-primary focus:border-primary focus:ring-2 focus:ring-primary/50"
+            >
+              <option value="KR">Korea (KR)</option>
+              <option value="JP1">Japan (JP1)</option>
+              <option value="TW2">Taiwan (TW2)</option>
+              <option value="VN2">Vietnam (VN2)</option>
+              <option value="SG2">SEA (SG2)</option>
+              <option value="OC1">Oceania (OC1)</option>
+              <option value="NA1">North America (NA1)</option>
+              <option value="EUW1">EU West (EUW1)</option>
+              <option value="EUN1">EU Nordic & East (EUN1)</option>
+              <option value="TR1">Turkey (TR1)</option>
+              <option value="RU">Russia (RU)</option>
+              <option value="BR1">Brazil (BR1)</option>
+              <option value="LA1">LAN (LA1)</option>
+              <option value="LA2">LAS (LA2)</option>
+            </select>
+          </div>
+          <div class="sm:col-span-3 flex justify-center mt-4">
+            <button
+              type="submit"
+              class="flex min-w-[120px] items-center justify-center rounded-lg h-12 px-6 bg-primary text-text-primary text-base font-bold hover:opacity-90 player-submit-btn"
+            >
+              <span>Search</span>
+            </button>
+          </div>
+        </form>
 
-            <form class="player-form">
-                <div class="form-group">
-                    <label for="riot_id">Riot ID</label>
-                    <input type="text" id="riot_id" name="riot_id" placeholder="e.g. Hide on bush" required>
-                </div>
-                <div class="form-group">
-                    <label for="tag">Tag</label>
-                    <input type="text" id="tag" name="tag" placeholder="e.g. KR1" required>
-                </div>
-                <div class="form-group">
-                    <label for="platform">Server / Region</label>
-                    <select id="platform" name="platform" required>
-                        <option value="KR">Korea (KR)</option>
-                        <option value="JP1">Japan (JP1)</option>
-                        <option value="TW2">Taiwan (TW2)</option>
-                        <option value="VN2">Vietnam (VN2)</option>
-                        <option value="SG2">SEA (SG2)</option>
-                        <option value="OC1">Oceania (OC1)</option>
-                        <option value="NA1">North America (NA1)</option>
-                        <option value="EUW1">EU West (EUW1)</option>
-                        <option value="EUN1">EU Nordic & East (EUN1)</option>
-                        <option value="TR1">Turkey (TR1)</option>
-                        <option value="RU">Russia (RU)</option>
-                        <option value="BR1">Brazil (BR1)</option> 
-                        <option value="LA1">LAN (LA1)</option>
-                        <option value="LA2">LAS (LA2)</option>
-                    </select>
-                </div>
-                <button type="submit" class="player-submit-btn">Search</button>
-            </form>
-            
-            <div class="progress-bar-container" style="display:none;">
-                <div class="progress-bar"></div>
-            </div>
+        <div
+          class="progress-bar-container w-full bg-border rounded-full h-2 overflow-hidden hidden"
+        >
+          <div class="progress-bar bg-primary h-2 w-0"></div>
+        </div>
 
-            <div id="result" class="result-container" style="margin-top: 20px;"></div>
-            
-        </section>
+        <div id="lookup-message" class="form-message mt-4"></div>
+      </section>
+    </div>
 
-    </main>
+    <!-- ======== 寬容器：查詢結果 ======== -->
+    <div class="w-full">
+      <div
+        id="result"
+        class="result-container mx-auto max-w-[1400px] mt-8 px-4"
+      ></div>
+    </div>
+  </main>
 
-    <footer>
-        <p>&copy; 2025 WX. Built with ❤️ on AWS</p>
-    </footer>
-    
-    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
+  <footer class="text-center text-text-secondary py-8 text-sm">
+    © 2025 WX. Built with ❤️ on AWS.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
