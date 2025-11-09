@@ -145,14 +145,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h4 class="text-text-secondary text-xs font-medium mb-2">Sub-traits</h4>
                 <div id="styleTags" class="flex flex-wrap gap-2"></div>
               </div>
-
-              <!-- 理由（可展開） -->
-              <div class="mt-4">
-                <details id="styleReasonsWrap" class="rounded-md border border-border">
-                  <summary class="px-3 py-2 cursor-pointer select-none">Why these tags?</summary>
-                  <ul id="styleReasons" class="px-4 py-3 list-disc marker:text-text-secondary/80 space-y-1"></ul>
-                </details>
-              </div>
             </div>
           </section>
 
@@ -171,8 +163,6 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
             </section>
       `;
-
-
         resultDiv.insertAdjacentHTML('beforeend', statsHTML);
 
         // === Render actual data ===
@@ -478,7 +468,7 @@ function renderDetailStats(data) {
 // === 第二列右側：風格分析（四主風格 + 副詞條） ===
 function renderStyleAnalysisCard(data) {
   const tagsEl = document.getElementById('styleTags');
-  const reasonsWrap = document.getElementById('styleReasonsWrap');
+  // const reasonsWrap = document.getElementById('styleReasonsWrap');
   const reasonsEl = document.getElementById('styleReasons');
   const barsEl = document.getElementById('styleBars');
   const card = document.getElementById('styleCard');
