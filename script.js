@@ -104,73 +104,74 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // === Inject main result layout ===
         const statsHTML = `
-          <div class="player-stats">
-            <h2 class="sr-only">Player Insights</h2>
+        <div class="player-stats">
+          <h2 class="sr-only">Player Insights</h2>
 
-            <!-- first row: Champion Stats + Best Match -->
-            <section class="grid gap-8 py-6 items-stretch max-w-[1400px] mx-auto md:grid-cols-2">
-              <div class="flex flex-col justify-between rounded-lg border border-border bg-card p-6 h-full">
-                <h3 class="text-text-primary text-lg font-bold mb-6 text-center">Champion Stats</h3>
-                <div>
-                  <h4 class="text-text-secondary text-sm font-medium mb-3 text-center">Top 3 Most Played</h4>
-                  <div id="championList" class="grid grid-cols-3 gap-6 justify-items-center"></div>
-                </div>
-                <div class="mt-10">
-                  <h4 class="text-text-secondary text-sm font-medium mb-3 text-center">Top 3 Recommended by AI</h4>
-                  <div id="recommendationList" class="grid grid-cols-3 gap-6 justify-items-center"></div>
-                </div>
+          <!-- first row: Champion Stats + Best Match -->
+          <section class="grid gap-8 py-6 items-stretch max-w-[1400px] mx-auto md:grid-cols-2">
+            <div class="flex flex-col justify-between rounded-lg border border-border bg-card p-6 h-full">
+              <h3 class="text-text-primary text-lg font-bold mb-6 text-center">Champion Stats</h3>
+              <div>
+                <h4 class="text-text-secondary text-sm font-medium mb-3 text-center">Top 3 Most Played</h4>
+                <div id="championList" class="grid grid-cols-3 gap-6 justify-items-center"></div>
               </div>
-              <div class="rounded-lg border border-border bg-card p-6 h-full">
-                <h3 class="text-text-primary text-lg font-bold mb-4 text-center">Your Best Match</h3>
-                <div id="miniMatchCard"></div>
+              <div class="mt-10">
+                <h4 class="text-text-secondary text-sm font-medium mb-3 text-center">Top 3 Recommended by AI</h4>
+                <div id="recommendationList" class="grid grid-cols-3 gap-6 justify-items-center"></div>
               </div>
-            </section>
+            </div>
+            <div class="rounded-lg border border-border bg-card p-6 h-full">
+              <h3 class="text-text-primary text-lg font-bold mb-4 text-center">Your Best Match</h3>
+              <div id="miniMatchCard"></div>
+            </div>
+          </section>
 
-            <!-- second row: 左 = Player Stats，右 = Style Analysis -->
-            <section class="grid gap-8 py-2 items-stretch max-w-[1400px] mx-auto md:grid-cols-2">
-              <div class="rounded-lg border border-border bg-card p-6" id="detailStatsCard">
-                <h3 class="text-text-primary text-lg font-bold mb-4">📊 Player Stats</h3>
-                <div class="grid grid-cols-2 gap-3" id="detailStatsGrid"></div>
+          <!-- second row: 左 = Player Stats(寬) ，右 = Style Analysis(窄) -->
+          <section class="grid gap-8 py-2 items-stretch max-w-[1400px] mx-auto md:grid-cols-5">
+            <div class="rounded-lg border border-border bg-card p-6 md:col-span-3" id="detailStatsCard">
+              <h3 class="text-text-primary text-lg font-bold mb-4">📊 Player Stats</h3>
+              <div class="grid grid-cols-2 gap-3" id="detailStatsGrid"></div>
+            </div>
+
+            <div class="rounded-lg border border-border bg-card p-6 h-full md:col-span-2" id="styleCard">
+              <h3 class="text-text-primary text-lg font-bold mb-4">🎯 Style Analysis</h3>
+
+              <!-- 四個主風格百分比條 -->
+              <div id="styleBars" class="space-y-3 mb-4"></div>
+
+              <!-- 副詞條 Tags -->
+              <div>
+                <h4 class="text-text-secondary text-xs font-medium mb-2">Sub-traits</h4>
+                <div id="styleTags" class="flex flex-wrap gap-2"></div>
               </div>
 
-              <div class="rounded-lg border border-border bg-card p-6 h-full" id="styleCard">
-                <h3 class="text-text-primary text-lg font-bold mb-4">🎯 Style Analysis</h3>
-
-                <!-- 四個主風格百分比條 -->
-                <div id="styleBars" class="space-y-3 mb-4"></div>
-
-                <!-- 副詞條 Tags -->
-                <div>
-                  <h4 class="text-text-secondary text-xs font-medium mb-2">Sub-traits</h4>
-                  <div id="styleTags" class="flex flex-wrap gap-2"></div>
-                </div>
-
-                <!-- 理由（可展開） -->
-                <div class="mt-4">
-                  <details id="styleReasonsWrap" class="rounded-md border border-border">
-                    <summary class="px-3 py-2 cursor-pointer select-none">Why these tags?</summary>
-                    <ul id="styleReasons" class="px-4 py-3 list-disc marker:text-text-secondary/80 space-y-1"></ul>
-                  </details>
-                </div>
+              <!-- 理由（可展開） -->
+              <div class="mt-4">
+                <details id="styleReasonsWrap" class="rounded-md border border-border">
+                  <summary class="px-3 py-2 cursor-pointer select-none">Why these tags?</summary>
+                  <ul id="styleReasons" class="px-4 py-3 list-disc marker:text-text-secondary/80 space-y-1"></ul>
+                </details>
               </div>
-            </section>
+            </div>
+          </section>
 
-            <!-- third row: Heatmap + Timeline -->
-            <section class="grid gap-8 py-2 items-stretch max-w-[1400px] mx-auto">
-              <div class="rounded-lg border border-border bg-card p-6">
-                <h3 class="text-text-primary text-lg font-bold mb-4">🔥 Kill Heatmap</h3>
-                <div id="heatmapLegend" class="heatmap-legend"></div>
-                <canvas id="heatmapCanvas"></canvas>
+          <!-- third row: Heatmap + Timeline（補上 md:grid-cols-2，避免被拆成兩列） -->
+          <section class="grid gap-8 py-2 items-stretch max-w-[1400px] mx-auto md:grid-cols-2">
+            <div class="rounded-lg border border-border bg-card p-6">
+              <h3 class="text-text-primary text-lg font-bold mb-4">🔥 Kill Heatmap</h3>
+              <div id="heatmapLegend" class="heatmap-legend"></div>
+              <canvas id="heatmapCanvas"></canvas>
+            </div>
+            <div class="rounded-lg border border-border bg-card p-6">
+              <h3 class="text-text-primary text-lg font-bold mb-4">📈 Timeline Performance</h3>
+              <div class="aspect-[16/9] w-full">
+                <canvas id="timelineChart" class="w-full h-full"></canvas>
               </div>
-              <div class="rounded-lg border border-border bg-card p-6">
-                <h3 class="text-text-primary text-lg font-bold mb-4">📈 Timeline Performance</h3>
-                <div class="aspect-[16/9] w-full">
-                  <canvas id="timelineChart" class="w-full h-full"></canvas>
-                </div>
-              </div>
-            </section>
-          </div>
-        `;
+            </div>
+          </section>
+        </div>
+      `;
+
         resultDiv.insertAdjacentHTML('beforeend', statsHTML);
 
         // === Render actual data ===
