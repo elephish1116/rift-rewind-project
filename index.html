@@ -121,6 +121,58 @@
               <option value="LA2">LAS (LA2)</option>
             </select>
           </div>
+          <!-- ===== Compare with a friend (optional) ===== -->
+          <div class="col-span-full">
+            <details class="rounded-lg border border-border bg-card p-4 open:p-6">
+              <summary class="cursor-pointer text-sm font-semibold text-text-primary">
+                🔗 Compare with a friend (optional)
+              </summary>
+          
+              <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+                <div class="flex flex-col items-start gap-2 text-left">
+                  <label class="text-sm font-medium text-text-secondary" for="friend_id">Friend Riot ID</label>
+                  <input
+                    class="form-input h-12 w-full rounded-lg border border-border bg-background-dark px-4 text-text-primary placeholder:text-text-secondary focus:border-primary focus:ring-2 focus:ring-primary/50"
+                    id="friend_id" name="friend_id" placeholder="Hide on friend" />
+                </div>
+          
+                <div class="flex flex-col items-start gap-2 text-left">
+                  <label class="text-sm font-medium text-text-secondary" for="friend_tag">Friend Tag</label>
+                  <input
+                    class="form-input h-12 w-full rounded-lg border border-border bg-background-dark px-4 text-text-primary placeholder:text-text-secondary focus:border-primary focus:ring-2 focus:ring-primary/50"
+                    id="friend_tag" name="friend_tag" placeholder="KR1" />
+                </div>
+          
+                <div class="flex flex-col items-start gap-2 text-left">
+                  <label class="text-sm font-medium text-text-secondary" for="friend_platform">Friend Server / Region</label>
+                  <select id="friend_platform" name="friend_platform"
+                    class="form-select h-12 w-full rounded-lg border border-border bg-background-dark px-4 text-text-primary focus:border-primary focus:ring-2 focus:ring-primary/50">
+                    <option value="">Same as above</option>
+                    <option value="KR">Korea (KR)</option>
+                    <option value="JP1">Japan (JP1)</option>
+                    <option value="TW2">Taiwan (TW2)</option>
+                    <option value="VN2">Vietnam (VN2)</option>
+                    <option value="SG2">SEA (SG2)</option>
+                    <option value="OC1">Oceania (OC1)</option>
+                    <option value="NA1">North America (NA1)</option>
+                    <option value="EUW1">EU West (EUW1)</option>
+                    <option value="EUN1">EU Nordic & East (EUN1)</option>
+                    <option value="TR1">Turkey (TR1)</option>
+                    <option value="RU">Russia (RU)</option>
+                    <option value="BR1">Brazil (BR1)</option>
+                    <option value="LA1">LAN (LA1)</option>
+                    <option value="LA2">LAS (LA2)</option>
+                  </select>
+                </div>
+              </div>
+          
+              <p class="mt-3 text-xs text-text-secondary">
+                只要填了 <strong>Friend Riot ID</strong> 和 <strong>Friend Tag</strong>，就會啟用雙人比較並回傳 <code>duo_comparison</code>。
+                如果不填，依然可以跑單人分析。
+              </p>
+            </details>
+          </div>
+
           <div class="sm:col-span-3 flex justify-center mt-4">
             <button
               type="submit"
