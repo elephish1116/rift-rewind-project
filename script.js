@@ -127,13 +127,14 @@ document.addEventListener('DOMContentLoaded', function() {
           </section>
 
           <!-- second row: 左 = Player Stats(寬) ，右 = Style Analysis(窄) -->
-          <section class="grid gap-8 py-2 items-stretch max-w-[1400px] mx-auto md:grid-cols-5">
-            <div class="rounded-lg border border-border bg-card p-6 md:col-span-3" id="detailStatsCard">
+          <!-- 預設兩欄，到了 lg 再分成 5 欄 (3:2) -->
+          <section class="grid gap-8 py-2 items-stretch max-w-[1400px] mx-auto grid-cols-2 lg:grid-cols-5">
+            <div class="rounded-lg border border-border bg-card p-6 col-span-1 lg:col-span-3" id="detailStatsCard">
               <h3 class="text-text-primary text-lg font-bold mb-4">📊 Player Stats</h3>
               <div class="grid grid-cols-2 gap-3" id="detailStatsGrid"></div>
             </div>
 
-            <div class="rounded-lg border border-border bg-card p-6 h-full md:col-span-2" id="styleCard">
+            <div class="rounded-lg border border-border bg-card p-6 h-full col-span-1 lg:col-span-2" id="styleCard">
               <h3 class="text-text-primary text-lg font-bold mb-4">🎯 Style Analysis</h3>
 
               <!-- 四個主風格百分比條 -->
@@ -155,22 +156,22 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           </section>
 
-          <!-- third row: Heatmap + Timeline（補上 md:grid-cols-2，避免被拆成兩列） -->
-          <section class="grid gap-8 py-2 items-stretch max-w-[1400px] mx-auto md:grid-cols-2">
-            <div class="rounded-lg border border-border bg-card p-6">
-              <h3 class="text-text-primary text-lg font-bold mb-4">🔥 Kill Heatmap</h3>
-              <div id="heatmapLegend" class="heatmap-legend"></div>
-              <canvas id="heatmapCanvas"></canvas>
-            </div>
-            <div class="rounded-lg border border-border bg-card p-6">
-              <h3 class="text-text-primary text-lg font-bold mb-4">📈 Timeline Performance</h3>
-              <div class="aspect-[16/9] w-full">
-                <canvas id="timelineChart" class="w-full h-full"></canvas>
+          <!-- third row: Heatmap + Timeline -->
+            <section class="grid gap-8 py-2 items-stretch max-w-[1400px] mx-auto">
+              <div class="rounded-lg border border-border bg-card p-6">
+                <h3 class="text-text-primary text-lg font-bold mb-4">🔥 Kill Heatmap</h3>
+                <div id="heatmapLegend" class="heatmap-legend"></div>
+                <canvas id="heatmapCanvas"></canvas>
               </div>
-            </div>
-          </section>
-        </div>
+              <div class="rounded-lg border border-border bg-card p-6">
+                <h3 class="text-text-primary text-lg font-bold mb-4">📈 Timeline Performance</h3>
+                <div class="aspect-[16/9] w-full">
+                  <canvas id="timelineChart" class="w-full h-full"></canvas>
+                </div>
+              </div>
+            </section>
       `;
+
 
         resultDiv.insertAdjacentHTML('beforeend', statsHTML);
 
