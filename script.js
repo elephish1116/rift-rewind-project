@@ -49,13 +49,23 @@ document.addEventListener('DOMContentLoaded', function() {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 300000);
 
+      const friendId = playerForm.friend_id?.value?.trim() || '';
+      const friendTag = playerForm.friend_tag?.value?.trim() || '';
+      const friendPlatform = document.getElementById('friend_platform')?.value || '';
+
+
       const response = await fetch(LAMBDA_STATS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           riot_id: riotId,
           tag: tag,
-          platform: document.getElementById('platform').value
+          platform: document.getElementById('platform').value,
+          ...(friendId && friendTag ? {
+            friend_id: friendId,
+            friend_tag: friendTag,
+            friend_platform: friendPlatform || document.getElementById('platform').value
+          } : {})
         }),
         signal: controller.signal
       }).finally(() => clearTimeout(timeout));
@@ -125,7 +135,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
               </div>
             </section>
-
+            <!-- Row 2.5: Duo Radar (optional) -->
+            <section id="row2b" style="margin-bottom:clamp(1.2rem,2vw,2rem)">
+              <div class="rounded-lg border border-border bg-card p-6 h-full">
+                <h3 class="text-text-primary text-lg font-bold mb-4">🎯 Duo Radar</h3>
+                <p id="duoNote" class="text-xs text-text-secondary mb-3"></p>
+                <div class="w-full max-w-[640px] mx-auto aspect-square">
+                  <canvas id="duoRadar"></canvas>
+                </div>
+              </div>
+            </section>
             <!-- Row 3: Heatmap + Timeline -->
             <section id="row3">
               <div class="rounded-lg border border-border bg-card p-6">
@@ -164,6 +183,21 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.champion_recommendation) renderRecommendations(data.champion_recommendation);
 
         renderStyleAnalysisAndStats(data);
+        // Duo Radar（有資料才畫，沒有就隱藏）
+        if (data.duo_comparison && !data.duo_comparison.error) {
+          renderDuoRadar(data.duo_comparison);
+        } else {
+          const row2b = document.getElementById('row2b');
+          if (row2b) {
+            if (data.duo_comparison?.error) {
+              const note = document.getElementById('duoNote');
+              if (note) note.textContent = `⚠️ ${data.duo_comparison.error}`;
+            } else {
+              row2b.style.display = 'none';
+            }
+          }
+        }
+
       }
     } catch (err) {
       const msgText = (err && err.name === 'AbortError')
@@ -359,6 +393,92 @@ function renderTimeline(data) {
   });
 }
 
+function renderDuoRadar(duo) {
+  const canvas = document.getElementById('duoRadar');
+  const note = document.getElementById('duoNote');
+  if (!canvas) return;
+
+  const userName = (duo.user_name || duo.user || '') || 'You';
+  const friendName = duo.friend_name || 'Friend';
+
+  const userRadar = duo.user_radar || {};
+  const friendRadar = duo.friend_radar || {};
+
+  // 以 user_radar 的鍵作為主 labels；若朋友有多出的鍵也合併
+  const keys = Array.from(new Set([
+    ...Object.keys(userRadar),
+    ...Object.keys(friendRadar)
+  ]));
+
+  if (note) {
+    note.textContent = `Comparing ${userName} and ${friendName}`;
+  }
+
+  // 將 0~10 分數轉為陣列
+  const uVals = keys.map(k => Number(userRadar[k] ?? 0));
+  const fVals = keys.map(k => Number(friendRadar[k] ?? 0));
+
+  // 如果之前已經有圖，清掉再畫（避免重複初始化）
+  if (canvas._chart) {
+    canvas._chart.destroy();
+    canvas._chart = null;
+  }
+
+  const chart = new Chart(canvas, {
+    type: 'radar',
+    data: {
+      labels: keys,
+      datasets: [
+        {
+          label: userName,
+          data: uVals,
+          borderWidth: 2,
+          pointRadius: 2,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.18)'
+        },
+        {
+          label: friendName,
+          data: fVals,
+          borderWidth: 2,
+          pointRadius: 2,
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245,158,11,0.18)'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        title: { display: false },
+        tooltip: { enabled: true }
+      },
+      scales: {
+        r: {
+          suggestedMin: 0,
+          suggestedMax: 10,
+          ticks: {
+            stepSize: 2,
+            showLabelBackdrop: false
+          },
+          grid: { circular: true },
+          pointLabels: {
+            font: { size: 11 }
+          }
+        }
+      },
+      elements: {
+        line: { tension: 0.2 }
+      }
+    }
+  });
+
+  canvas._chart = chart;
+}
+
+
 // === Champions ===
 function renderChampions(champs) {
   const list = document.getElementById('championList');
@@ -391,32 +511,46 @@ function renderRecommendations(recData) {
 // === 依你的 styles.css 做版面：row2 左寬右窄、row3 3:7；≤1024 單欄 ===
 function applyResponsiveGrids() {
   const row2 = document.getElementById('row2');
+  const row2b = document.getElementById('row2b');
   const row3 = document.getElementById('row3');
   if (!row2 || !row3) return;
 
-  const narrow = window.innerWidth <= 1024; // 若想在平板維持雙欄，可改成 900
+  const narrow = window.innerWidth <= 1024;
+
   if (narrow) {
     row2.style.display = 'grid';
     row2.style.gridTemplateColumns = '1fr';
     row2.style.gap = '2rem';
 
+    if (row2b) {
+      row2b.style.display = 'grid';
+      row2b.style.gridTemplateColumns = '1fr';
+      row2b.style.gap = '2rem';
+    }
+
     row3.style.display = 'grid';
     row3.style.gridTemplateColumns = '1fr';
     row3.style.gap = '2rem';
   } else {
-    // 第二列：左 7 右 3（左寬右窄）
     row2.style.display = 'grid';
     row2.style.gridTemplateColumns = '7fr 3fr';
     row2.style.gap = '2rem';
     row2.style.alignItems = 'stretch';
 
-    // 第三列：Heatmap 3 + Timeline 7
+    if (row2b) {
+      row2b.style.display = 'grid';
+      row2b.style.gridTemplateColumns = '1fr';
+      row2b.style.gap = '2rem';
+      row2b.style.alignItems = 'stretch';
+    }
+
     row3.style.display = 'grid';
     row3.style.gridTemplateColumns = '3fr 7fr';
     row3.style.gap = '2rem';
     row3.style.alignItems = 'stretch';
   }
 }
+
 window.addEventListener('resize', () => {
   applyResponsiveGrids();
 });
