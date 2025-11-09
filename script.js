@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // === Main fetch ===
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 65000);
+      const timeout = setTimeout(() => controller.abort(), 300000);
 
       const response = await fetch(LAMBDA_STATS_URL, {
         method: 'POST',
