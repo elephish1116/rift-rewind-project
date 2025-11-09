@@ -1,10 +1,29 @@
 const LAMBDA_STATS_URL = 'https://2flb553cqg4egpc33lyuasxbte0xvcdf.lambda-url.ap-southeast-2.on.aws/';
+
+// 記錄當前請求以便覆蓋中止
+let activeController = null;
+let activeTimeoutId = null;
+
 document.addEventListener('DOMContentLoaded', function() {
   const playerForm = document.querySelector('.player-form');
   if (!playerForm) return;
 
   playerForm.addEventListener('submit', async function(e) {
     e.preventDefault();
+
+    // 防重複送出
+    if (playerForm.dataset.loading === '1') return;
+    playerForm.dataset.loading = '1';
+
+    // 若上一個請求仍在，先中止它
+    if (activeController && typeof activeController.abort === 'function') {
+      try { activeController.abort('superseded'); } catch {}
+      activeController = null;
+    }
+    if (activeTimeoutId) {
+      clearTimeout(activeTimeoutId);
+      activeTimeoutId = null;
+    }
 
     const riotId = playerForm.riot_id.value.trim();
     const tag = playerForm.tag.value.trim();
@@ -43,11 +62,20 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 100);
     }, 50);
 
+    // === 建立可逾時／可中止的 signal ===
+    let signal;
+    if ('timeout' in AbortSignal) {
+      // 現代瀏覽器
+      signal = AbortSignal.timeout(90000); // 90s
+      activeController = { abort: () => {} }; // 佔位，便於下次覆蓋
+    } else {
+      activeController = new AbortController();
+      activeTimeoutId = setTimeout(() => activeController.abort('timeout'), 90000);
+      signal = activeController.signal;
+    }
+
     // === Main fetch ===
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 65000);
-
       const response = await fetch(LAMBDA_STATS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,8 +84,8 @@ document.addEventListener('DOMContentLoaded', function() {
           tag: tag,
           platform: document.getElementById('platform').value
         }),
-        signal: controller.signal
-      }).finally(() => clearTimeout(timeout));
+        signal
+      });
 
       const data = await response.json();
 
@@ -66,16 +94,10 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         if (data.note) {
           showLookupMessage(`ℹ ${data.note}`, 'info');
-          clearInterval(progressTimer);
-          progressBar.style.width = '100%';
-          setTimeout(() => {
-            progressContainer.style.display = 'none';
-            progressBar.style.width = '0%';
-          }, 600);
-          btn.textContent = 'search';
-          btn.disabled = false;
+          finalizeProgress();
           return;
         }
+
         showLookupMessage('✅ success', 'success');
         const simPercent = (data.matches?.Similarity ?? 0) * 100;
         const playerName = data.matches?.Player || 'Unknown';
@@ -83,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // === Inject main result layout ===
         const statsHTML = `
           <div class="player-stats">
-            <h2>Player Insights</h2>
+            <h2 class="sr-only">Player Insights</h2>
 
             <!-- first row: Champion Stats + Best Match -->
             <section class="grid gap-8 py-6 items-stretch max-w-[1400px] mx-auto md:grid-cols-2">
@@ -104,22 +126,26 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
             </section>
 
-            <!-- second row: Data (left) + Style (right) -->
+            <!-- second row: 左 = Player Stats，右 = Style Analysis -->
             <section class="grid gap-8 py-2 items-stretch max-w-[1400px] mx-auto md:grid-cols-2">
-              <div class="rounded-lg border border-border bg-card p-6 h-full" id="dataCard">
-                <h3 class="text-text-primary text-lg font-bold mb-4">📊 Player Stats (per game & ratios)</h3>
-                <div id="dataGrid" class="grid grid-cols-2 gap-3"></div>
+              <div class="rounded-lg border border-border bg-card p-6" id="detailStatsCard">
+                <h3 class="text-text-primary text-lg font-bold mb-4">📊 Player Stats</h3>
+                <div class="grid grid-cols-2 gap-3" id="detailStatsGrid"></div>
               </div>
+
               <div class="rounded-lg border border-border bg-card p-6 h-full" id="styleCard">
-                <h3 class="text-text-primary text-lg font-bold mb-4">🎯 Playstyle Analysis</h3>
+                <h3 class="text-text-primary text-lg font-bold mb-4">🎯 Style Analysis</h3>
+
                 <!-- 四個主風格百分比條 -->
                 <div id="styleBars" class="space-y-3 mb-4"></div>
-                <!-- Tags -->
+
+                <!-- 副詞條 Tags -->
                 <div>
-                  <h4 class="text-text-secondary text-xs font-medium mb-2">Secondary Traits</h4>
+                  <h4 class="text-text-secondary text-xs font-medium mb-2">Sub-traits</h4>
                   <div id="styleTags" class="flex flex-wrap gap-2"></div>
                 </div>
-                <!-- 理由（保留可展開） -->
+
+                <!-- 理由（可展開） -->
                 <div class="mt-4">
                   <details id="styleReasonsWrap" class="rounded-md border border-border">
                     <summary class="px-3 py-2 cursor-pointer select-none">Why these tags?</summary>
@@ -151,23 +177,30 @@ document.addEventListener('DOMContentLoaded', function() {
         renderMiniMatchCard({
           name: playerName,
           percent: simPercent,
-          analysis: '', // 移除上方文字說明
+          analysis: data.style_analysis || '',
           img: `images/players/${playerName}.jpg`
         });
 
-        if (data.heatmap_points) renderHeatmap(data.heatmap_points);
-        if (data.timeline) renderTimeline(data.timeline);
         if (data.common_champions) renderChampions(data.common_champions);
         if (data.champion_recommendation) renderRecommendations(data.champion_recommendation);
-
-        renderDataCard(data);          // 第二列左側：數據
-        renderStyleAnalysisCard(data); // 第二列右側：風格
-
+        renderDetailStats(data);
+        renderStyleAnalysisCard(data);
+        if (data.heatmap_points) renderHeatmap(data.heatmap_points);
+        if (data.timeline) renderTimeline(data.timeline);
       }
     } catch (err) {
-      showLookupMessage(`⚠️ Network or CORS error: ${err}`, 'error');
+      if (err && err.name === 'AbortError') {
+        const reason = (err && (err.cause || err.message)) || '';
+        const msg = /timeout|exceed/i.test(String(reason))
+          ? '⏱️ 請求逾時，伺服器較忙或網路不穩。請重試。'
+          : '🔌 請求已被中止（可能有新查詢覆蓋）。';
+        showLookupMessage(`⚠️ ${msg}`, 'error');
+      } else {
+        showLookupMessage(`⚠️ Network or CORS error: ${err}`, 'error');
+      }
     } finally {
-      clearInterval(progressTimer);
+      // 清理計時器、UI
+      if (progressTimer) clearInterval(progressTimer);
       progressBar.style.width = '100%';
       setTimeout(() => {
         progressContainer.style.display = 'none';
@@ -175,6 +208,26 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 600);
       btn.textContent = 'search';
       btn.disabled = false;
+      playerForm.dataset.loading = '0';
+
+      // 清理 controller 與 timeout
+      if (activeTimeoutId) {
+        clearTimeout(activeTimeoutId);
+        activeTimeoutId = null;
+      }
+      activeController = null;
+    }
+
+    function finalizeProgress() {
+      if (progressTimer) clearInterval(progressTimer);
+      progressBar.style.width = '100%';
+      setTimeout(() => {
+        progressContainer.style.display = 'none';
+        progressBar.style.width = '0%';
+      }, 600);
+      btn.textContent = 'search';
+      btn.disabled = false;
+      playerForm.dataset.loading = '0';
     }
   });
 });
@@ -197,56 +250,7 @@ function escapeHtml(str) {
     .replaceAll("'", '&#39;');
 }
 
-// ======================================================
-// 派生四大主風格（Aggressive / Safe / Team-oriented / Scaling）
-// ======================================================
-function deriveStyles(data) {
-  const pf = data.player_features || {};
-  const sp = data.style_profile || {};
-  const vision = data.vision || {};
-  const tags = Array.isArray(data.style_tags) ? data.style_tags : [];
-
-  const KP   = Number(pf["KP"] ?? 0);
-  const DMG  = Number(pf["DMG%"] ?? 0);
-  const DPM  = Number(pf["DPM_user"] ?? 0);
-  const deaths_pg  = Number(sp.deaths_pg ?? pf.DPG ?? 0);
-  const late_frac  = Number(sp.late_k_frac ?? 0);
-  const wardsPlaced = Number(vision.placed ?? 0);
-  const wardsKilled = Number(vision.killed ?? 0);
-
-  const clamp01 = v => Math.max(0, Math.min(1, v));
-  const lin = (x, a, b) => clamp01((x - a) / (b - a));
-
-  // Aggressive：高 KP / 高 DPM / 較多 deaths
-  const sAgg = 0.45 * lin(KP, 55, 80) + 0.35 * lin(DPM, 450, 900) + 0.20 * lin(deaths_pg, 3.0, 6.0);
-
-  // Safe：低死亡、偏低 DMG/DPM
-  const sSafe = 0.60 * (1 - lin(deaths_pg, 2.5, 5.0)) + 0.20 * (1 - lin(DMG, 20, 35)) + 0.20 * (1 - lin(DPM, 450, 900));
-
-  // Team-oriented：高 KP + 有視野參與
-  const sTeam = 0.70 * lin(KP, 55, 85) + 0.15 * lin(wardsPlaced, 8, 14) + 0.15 * lin(wardsKilled, 0.8, 1.8);
-
-  // Scaling：後期比例高 + 輸出高
-  const sScaling = 0.60 * lin(late_frac, 0.30, 0.55) + 0.40 * Math.max(lin(DPM, 450, 900), lin(DMG, 22, 35));
-
-  let vec = [sAgg, sSafe, sTeam, sScaling];
-  const sum = vec.reduce((a, b) => a + b, 0) || 1;
-  vec = vec.map(v => (v / sum) * 100);
-
-  const core = [
-    { key: 'Aggressive',     value: Math.round(vec[0]) },
-    { key: 'Safe',           value: Math.round(vec[1]) },
-    { key: 'Team-oriented',  value: Math.round(vec[2]) },
-    { key: 'Scaling',        value: Math.round(vec[3]) },
-  ];
-
-  const primarySet = new Set(['aggressive', 'safe', 'team-oriented', 'scaling']);
-  const subs = tags.filter(t => !primarySet.has(t));
-
-  return { core, subs };
-}
-
-// === Mini Match Card（移除說明段落） ===
+// === Mini Match Card ===
 function renderMiniMatchCard({ name, percent, analysis, img }) {
   const box = document.getElementById('miniMatchCard');
   if (!box) return;
@@ -266,6 +270,10 @@ function renderMiniMatchCard({ name, percent, analysis, img }) {
 
         <h2 class="profile-name">${name}</h2>
 
+        <p class="profile-description">
+          ${escapeHtml(analysis || 'No analysis available.')}
+        </p>
+
         <div class="button-group">
           <button class="btn btn-primary" id="saveMatchCard">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -284,7 +292,7 @@ function renderMiniMatchCard({ name, percent, analysis, img }) {
   const saveBtn = document.getElementById('saveMatchCard');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
-      const card = document.querySelector('.match-card');
+      const card = document.querySelector('.match-card'); // 要截圖的容器
       if (!card) return;
 
       try {
@@ -429,29 +437,31 @@ function renderRecommendations(recData) {
   `).join('');
 }
 
-// === 第二列左側：數據卡 ===
-function renderDataCard(data) {
-  const grid = document.getElementById('dataGrid');
+// === 第二列左側：詳細數據 ===
+function renderDetailStats(data) {
+  const grid = document.getElementById('detailStatsGrid');
   if (!grid) return;
+
   const pf = data.player_features || {};
   const sp = data.style_profile || {};
-  const pos = (pf.Position || 'unknown').toUpperCase();
-  grid.innerHTML = '';
+  const vis = data.vision || {};
 
   const cells = [
     ['Kills / game', fmtNum(sp.kills_pg)],
-    ['Assists / game', fmtNum(sp.assists_pg)],
     ['Deaths / game', fmtNum(sp.deaths_pg)],
+    ['Assists / game', fmtNum(sp.assists_pg)],
     ['KP', pf['KP'] != null ? pf['KP'].toFixed(1) + '%' : '—'],
     ['DMG%', pf['DMG%'] != null ? pf['DMG%'].toFixed(1) + '%' : '—'],
     ['DTH%', pf['DTH%'] != null ? pf['DTH%'].toFixed(1) + '%' : '—'],
     ['CSPM', fmtNum(pf['CSPM'])],
     ['DPM', pf['DPM_user'] != null ? pf['DPM_user'].toFixed(0) : '—'],
     ['GOLD%', pf['GOLD%'] != null ? pf['GOLD%'].toFixed(1) + '%' : '—'],
-    ['Wards placed / game', fmtNum(data.vision?.placed)],
-    ['Wards cleared / game', fmtNum(data.vision?.killed)],
-    ['Position', pos],
+    ['Wards placed / game', fmtNum(vis.placed)],
+    ['Wards cleared / game', fmtNum(vis.killed)],
+    ['Early kill share', sp.early_k_frac != null ? pct(sp.early_k_frac) : '—'],
   ];
+
+  grid.innerHTML = '';
   cells.forEach(([k, v]) => {
     const div = document.createElement('div');
     div.className = 'rounded-md border border-border p-3';
@@ -463,7 +473,7 @@ function renderDataCard(data) {
   });
 }
 
-// === 第二列右側：風格卡（四大主風格 + 副詞條 + 理由） ===
+// === 第二列右側：風格分析（四主風格 + 副詞條） ===
 function renderStyleAnalysisCard(data) {
   const tagsEl = document.getElementById('styleTags');
   const reasonsWrap = document.getElementById('styleReasonsWrap');
@@ -472,30 +482,69 @@ function renderStyleAnalysisCard(data) {
   const card = document.getElementById('styleCard');
   if (!card) return;
 
-  // 1) 四大主風格條
-  const { core, subs } = deriveStyles(data);
+  const pf = data.player_features || {};
+  const sp = data.style_profile || {};
+  const vs = data.vision || {};
+
+  // ===== 四個主風格分數（0..100） =====
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const toPct = v => Math.round(clamp01(v) * 100);
+
+  const KP = Number(pf['KP'] || 0);
+  const DMG = Number(pf['DMG%'] || 0);
+  const DTH = Number(pf['DTH%'] || 0);
+  const DPM = Number(pf['DPM_user'] || 0);
+  const lateFrac = Number(sp.late_k_frac || 0);
+  const DPG = Number(sp.deaths_pg || 0);
+
+  // Aggressive：高 DPM / 高 KP，死亡高一點不扣分太多
+  const sAgg = clamp01((DPM / 550) * 0.45 + (KP / 70) * 0.35 + Math.max(0, (DPG - 3.0) / 4) * 0.20);
+  const scoreAggressive = toPct(sAgg);
+
+  // Safe：低死亡、低 DTH%（穩健）
+  const sSafe = clamp01((Math.max(0, (3.5 - DPG)) / 3.5) * 0.6 + Math.max(0, (20 - DTH) / 20) * 0.4);
+  const scoreSafe = toPct(sSafe);
+
+  // Team-oriented：高 KP + 一點視野指標
+  const sTeam = clamp01((KP / 75) * 0.75 + ((vs.placed || 0) / 12) * 0.10 + ((vs.killed || 0) / 2) * 0.15);
+  const scoreTeam = toPct(sTeam);
+
+  // Scaling：後期參與 + 輸出占比
+  const sScaling = clamp01(lateFrac * 0.85 + (DMG / 30) * 0.15);
+  const scoreScaling = toPct(sScaling);
+
+  const bars = [
+    ['Aggressive',     scoreAggressive],
+    ['Safe',           scoreSafe],
+    ['Team-oriented',  scoreTeam],
+    ['Scaling',        scoreScaling],
+  ];
+
   barsEl.innerHTML = '';
-  core.forEach(cs => {
+  bars.forEach(([label, val]) => {
     const row = document.createElement('div');
     row.innerHTML = `
       <div class="flex items-center justify-between text-xs mb-1">
-        <span class="text-text-secondary">${cs.key}</span>
-        <span class="font-semibold">${Math.round(cs.value)}%</span>
+        <span class="text-text-secondary">${label}</span>
+        <span class="font-semibold">${val}%</span>
       </div>
       <div class="w-full h-2 rounded-full bg-border overflow-hidden">
-        <div class="h-2 bg-primary" style="width:${Math.round(cs.value)}%"></div>
+        <div class="h-2 bg-primary" style="width:${val}%"></div>
       </div>
     `;
     barsEl.appendChild(row);
   });
 
-  // 2) 副詞條（過濾掉四個主風格）
+  // ===== 副詞條（排除四個主風格） =====
+  const primarySet = new Set(['aggressive', 'safe', 'team-oriented', 'scaling']);
+  const allTags = Array.isArray(data.style_tags) ? data.style_tags : [];
+  const subTags = allTags.filter(t => !primarySet.has(t.toLowerCase()));
   tagsEl.innerHTML = '';
-  subs.forEach(t => tagsEl.appendChild(makeTagBadge(t)));
+  subTags.forEach(t => tagsEl.appendChild(makeTagBadge(t)));
 
-  // 3) 理由（只列出副詞條對應的理由，避免和主風格重疊）
+  // ===== 理由（可收合） =====
   const reasons = data.style_tag_reasons || {};
-  const keys = subs.filter(k => reasons[k]);
+  const keys = Object.keys(reasons);
   reasonsEl.innerHTML = '';
   if (keys.length === 0) {
     reasonsWrap.open = false;
@@ -510,10 +559,9 @@ function renderStyleAnalysisCard(data) {
   }
 }
 
-// === Tag 樣式 ===
 function makeTagBadge(name) {
   const span = document.createElement('span');
-  span.textContent = name.replace(/-/g,' ');
+  span.textContent = name;
   span.className = 'text-xs px-2.5 py-1 rounded-full border';
   const colorMap = {
     'teamfight-carry':'#8ab4ff',
