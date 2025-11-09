@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <h2>Player Insights</h2>
 
             <!-- Row 1: Champion Stats + Best Match -->
-            <section id="row1">
+            <section id="row1" style="margin-bottom:clamp(1.2rem,2vw,2rem)">
               <div class="rounded-lg border border-border bg-card p-6 h-full">
                 <h3 class="text-text-primary text-lg font-bold mb-6 text-center">Champion Stats</h3>
                 <div>
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </section>
 
             <!-- Row 2: Player Stats (left, wide) + Style Analysis (right, narrow) -->
-            <section id="row2">
+            <section id="row2" style="margin-bottom:clamp(1.2rem,2vw,2rem)">
               <div class="rounded-lg border border-border bg-card p-6 h-full">
                 <h3 class="text-text-primary text-lg font-bold mb-4">Player Stats</h3>
                 <div id="detailStatsGrid" class="grid grid-cols-2 gap-3"></div>
