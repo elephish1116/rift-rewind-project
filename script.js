@@ -426,7 +426,7 @@ function renderStyleAnalysisAndStats(data) {
   const statsGrid = document.getElementById('detailStatsGrid');
   const barsEl = document.getElementById('styleBars');
   const tagsEl = document.getElementById('styleTags');
-  if (!statsGrid || !barsEl || !tagsEl || !reasonsWrap) return;
+  if (!statsGrid || !barsEl || !tagsEl) return;
 
   // ===== Player Stats（左側） =====
   const pf = data.player_features || {};
