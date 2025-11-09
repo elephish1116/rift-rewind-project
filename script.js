@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showLookupMessage(`❌ ${data.error || 'fail'}`, 'error');
       } else {
         if (data.note) {
-          showLookupMessage(`ℹ ${data.note}`, 'info');
+          showLookupMessage(`ℹ️ ${data.note}`, 'info');
           clearInterval(progressTimer);
           progressBar.style.width = '100%';
           setTimeout(() => {
@@ -108,12 +108,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Row 2: Player Stats (left, wide) + Style Analysis (right, narrow) -->
             <section id="row2" style="margin-bottom:clamp(1.2rem,2vw,2rem)">
               <div class="rounded-lg border border-border bg-card p-6 h-full">
-                <h3 class="text-text-primary text-lg font-bold mb-4">Player Stats</h3>
+                <h3 class="text-text-primary text-lg font-bold mb-4">📊 Player Stats</h3>
                 <div id="detailStatsGrid" class="grid grid-cols-2 gap-3"></div>
               </div>
 
               <div class="rounded-lg border border-border bg-card p-6 h-full" id="styleCard">
-                <h3 class="text-text-primary text-lg font-bold mb-4 text-center">Style Analysis</h3>
+                <h3 class="text-text-primary text-lg font-bold mb-4 text-center">🔎 Style Analysis</h3>
 
                 <!-- 四個主風格百分比條：Aggressive / Safe / Team-oriented / Scaling -->
                 <div id="styleBars" class="space-y-3 mb-4"></div>
