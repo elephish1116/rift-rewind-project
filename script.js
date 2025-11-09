@@ -123,14 +123,6 @@ document.addEventListener('DOMContentLoaded', function() {
                   <h4 class="text-text-secondary text-xs font-medium mb-2">Tags</h4>
                   <div id="styleTags" class="flex flex-wrap gap-2"></div>
                 </div>
-
-                <!-- 理由（可展開） -->
-                <div class="mt-4">
-                  <details id="styleReasonsWrap" class="rounded-md border border-border">
-                    <summary class="px-3 py-2 cursor-pointer select-none">Why these tags?</summary>
-                    <ul id="styleReasons" class="px-4 py-3 list-disc marker:text-text-secondary/80 space-y-1"></ul>
-                  </details>
-                </div>
               </div>
             </section>
 
@@ -434,10 +426,7 @@ function renderStyleAnalysisAndStats(data) {
   const statsGrid = document.getElementById('detailStatsGrid');
   const barsEl = document.getElementById('styleBars');
   const tagsEl = document.getElementById('styleTags');
-  const reasonsEl = document.getElementById('styleReasons');
-  const reasonsWrap = document.getElementById('styleReasonsWrap');
-
-  if (!statsGrid || !barsEl || !tagsEl || !reasonsWrap || !reasonsEl) return;
+  if (!statsGrid || !barsEl || !tagsEl || !reasonsWrap) return;
 
   // ===== Player Stats（左側） =====
   const pf = data.player_features || {};
@@ -514,22 +503,6 @@ function renderStyleAnalysisAndStats(data) {
   // ===== Tags（其餘副詞條） =====
   tagsEl.innerHTML = '';
   (data.style_tags || []).forEach(t => tagsEl.appendChild(makeTagBadge(t)));
-
-  // ===== 理由 =====
-  const reasons = data.style_tag_reasons || {};
-  const keys = Object.keys(reasons);
-  reasonsEl.innerHTML = '';
-  if (keys.length === 0) {
-    reasonsWrap.open = false;
-    reasonsWrap.style.display = 'none';
-  } else {
-    reasonsWrap.style.display = 'block';
-    keys.forEach(k => {
-      const li = document.createElement('li');
-      li.textContent = `[${k}] ${reasons[k]}`;
-      reasonsEl.appendChild(li);
-    });
-  }
 }
 
 function makeTagBadge(name) {
