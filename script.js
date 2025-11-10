@@ -398,7 +398,7 @@ function renderDuoRadar(duo) {
   const note = document.getElementById('duoNote');
   if (!canvas) return;
 
-  const userName = (duo.user_name || duo.user || '') || 'You';
+  const userName = duo.user_name || 'You';
   const friendName = duo.friend_name || 'Friend';
   const userRadar = duo.user_radar || {};
   const friendRadar = duo.friend_radar || {};
@@ -489,7 +489,6 @@ function renderDuoRadar(duo) {
               const base = Chart.defaults.plugins.legend.labels.generateLabels(chart);
               return base.map(item => {
                 const ds = chart.data.datasets[item.datasetIndex];
-                // 用線色當填色＋外框，讓圖例顏色明確
                 item.fillStyle = ds.borderColor;
                 item.strokeStyle = ds.borderColor;
                 item.lineWidth = 2;
