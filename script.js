@@ -400,29 +400,53 @@ function renderDuoRadar(duo) {
 
   const userName = (duo.user_name || duo.user || '') || 'You';
   const friendName = duo.friend_name || 'Friend';
-
   const userRadar = duo.user_radar || {};
   const friendRadar = duo.friend_radar || {};
 
-  // 以 user_radar 的鍵作為主 labels；若朋友有多出的鍵也合併
-  const keys = Array.from(new Set([
-    ...Object.keys(userRadar),
-    ...Object.keys(friendRadar)
-  ]));
+  const keys = Array.from(new Set([...Object.keys(userRadar), ...Object.keys(friendRadar)]));
 
-  if (note) {
-    note.textContent = `Comparing ${userName} and ${friendName}`;
-  }
+  if (note) note.textContent = `Comparing ${userName} and ${friendName}`;
 
-  // 將 0~10 分數轉為陣列
   const uVals = keys.map(k => Number(userRadar[k] ?? 0));
   const fVals = keys.map(k => Number(friendRadar[k] ?? 0));
 
-  // 如果之前已經有圖，清掉再畫（避免重複初始化）
+  // 若已存在圖，先銷毀
   if (canvas._chart) {
     canvas._chart.destroy();
     canvas._chart = null;
   }
+
+  // ---- 顏色設定（深色主題）----
+  const GRID = 'rgba(255,255,255,0.12)';      // 內部格線
+  const AXES = 'rgba(255,255,255,0.18)';      // 放射軸線
+  const LABEL = 'rgba(255,255,255,0.75)';     // 文字
+  const TICK  = 'rgba(255,255,255,0.55)';     // 刻度
+  const OUTER = 'rgba(255,255,255,0.45)';     // 最外框
+
+  // ---- 自訂插件：把外框再描粗一圈 ----
+  const outerFrame = {
+    id: 'outerFrame',
+    afterDraw(chart, args, pluginOpts) {
+      const r = chart.scales?.r;
+      if (!r) return;
+      const ctx = chart.ctx;
+      const color = pluginOpts?.color || OUTER;
+      const lw = pluginOpts?.lineWidth || 2;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lw;
+      ctx.beginPath();
+      const count = r._pointLabels.length;
+      for (let i = 0; i < count; i++) {
+        const pt = r.getPointPositionForValue(i, r.max);
+        if (i === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
 
   const chart = new Chart(canvas, {
     type: 'radar',
@@ -432,51 +456,57 @@ function renderDuoRadar(duo) {
         {
           label: userName,
           data: uVals,
-          borderWidth: 2,
-          pointRadius: 2,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59,130,246,0.18)'
+          borderWidth: 2.5,
+          pointRadius: 2.5,
+          borderColor: '#8b5cf6',                 // 紫
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#ffffff',
+          backgroundColor: 'rgba(139,92,246,0.18)'
         },
         {
           label: friendName,
           data: fVals,
-          borderWidth: 2,
-          pointRadius: 2,
-          borderColor: '#f59e0b',
-          backgroundColor: 'rgba(245,158,11,0.18)'
+          borderWidth: 2.5,
+          pointRadius: 2.5,
+          borderColor: '#86efac',                 // 綠
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#ffffff',
+          backgroundColor: 'rgba(134,239,172,0.18)'
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: 10 },
       plugins: {
-        legend: { position: 'top' },
-        title: { display: false },
-        tooltip: { enabled: true }
+        legend: { position: 'bottom', labels: { color: LABEL, usePointStyle: true, boxWidth: 10 } },
+        tooltip: { enabled: true },
+        outerFrame: { color: OUTER, lineWidth: 2 }   // 插件參數
       },
       scales: {
         r: {
           suggestedMin: 0,
           suggestedMax: 10,
+          angleLines: { color: AXES, lineWidth: 1 },
+          grid: { color: GRID, lineWidth: 1 },       // 內部多邊格線
           ticks: {
-            stepSize: 2,
-            showLabelBackdrop: false
+            color: TICK,
+            backdropColor: 'transparent',
+            showLabelBackdrop: false,
+            stepSize: 2
           },
-          grid: { circular: true },
-          pointLabels: {
-            font: { size: 11 }
-          }
+          pointLabels: { color: LABEL, font: { size: 12 } }
         }
       },
-      elements: {
-        line: { tension: 0.2 }
-      }
-    }
+      elements: { line: { tension: 0 } }
+    },
+    plugins: [outerFrame]
   });
 
   canvas._chart = chart;
 }
+
 
 
 // === Champions ===
