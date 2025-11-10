@@ -143,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="w-full max-w-[640px] mx-auto aspect-square">
                   <canvas id="duoRadar"></canvas>
                 </div>
+                <div id="duoText" class="mt-4 text-sm leading-relaxed text-text-secondary"></div>
               </div>
             </section>
             <!-- Row 3: Heatmap + Timeline -->
@@ -186,12 +187,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Duo Radar（有資料才畫，沒有就隱藏）
         if (data.duo_comparison && !data.duo_comparison.error) {
           renderDuoRadar(data.duo_comparison);
+          const duoTextEl = document.getElementById('duoText');
+          if (duoTextEl) {
+            const txt = data.duo_comparison.duo_analysis || '';
+            duoTextEl.innerHTML = txt ? escapeHtml(txt) : '';
+            duoTextEl.style.display = txt ? 'block' : 'none';
+          }
         } else {
           const row2b = document.getElementById('row2b');
           if (row2b) {
             if (data.duo_comparison?.error) {
               const note = document.getElementById('duoNote');
               if (note) note.textContent = `⚠️ ${data.duo_comparison.error}`;
+              const duoTextEl = document.getElementById('duoText');
+              if (duoTextEl) {
+                duoTextEl.textContent = '';
+                duoTextEl.style.display = 'none';
+              }
             } else {
               row2b.style.display = 'none';
             }

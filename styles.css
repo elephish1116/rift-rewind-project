@@ -142,6 +142,12 @@
     line-height: 1.45;
   }
   
+    #duoText {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border, #312B44);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
   /* === Heatmap === */
   #heatmapCanvas {
     width: 100%;
