@@ -480,7 +480,25 @@ function renderDuoRadar(duo) {
       maintainAspectRatio: false,
       layout: { padding: 10 },
       plugins: {
-        legend: { position: 'bottom', labels: { color: LABEL, usePointStyle: true, boxWidth: 10 } },
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: LABEL,
+            usePointStyle: true,
+            generateLabels(chart) {
+              const base = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+              return base.map(item => {
+                const ds = chart.data.datasets[item.datasetIndex];
+                // 用線色當填色＋外框，讓圖例顏色明確
+                item.fillStyle = ds.borderColor;
+                item.strokeStyle = ds.borderColor;
+                item.lineWidth = 2;
+                item.pointStyle = 'circle';
+                return item;
+              });
+            }
+          }
+        },
         tooltip: { enabled: true },
         outerFrame: { color: OUTER, lineWidth: 2 }   // 插件參數
       },
